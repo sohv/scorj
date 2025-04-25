@@ -15,12 +15,12 @@ A smart resume scoring tool that evaluates your resume against LinkedIn job desc
 
 ```
 resumeroast/
-├── backend/           # FastAPI backend
-├── frontend/         # React frontend
-├── streamlit_app/    # Streamlit interface
-├── gradio_app/       # Gradio interface
-├── utils/            # Utility functions
-└── tests/            # Test files
+├── backend/
+├── frontend/
+├── streamlit_app/
+├── gradio_app/
+├── utils/
+└── tests/
 ```
 
 ## Setup
