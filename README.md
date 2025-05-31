@@ -1,6 +1,8 @@
 # ResumeRoast
 
-A smart resume scoring tool that evaluates your resume against LinkedIn job descriptions using advanced AI techniques. WORK CURRENTLY IN PROGRESS
+A smart resume scoring tool that evaluates your resume against LinkedIn job descriptions using advanced AI techniques. 
+
+> WORK CURRENTLY IN PROGRESS
 
 ## Features
 
