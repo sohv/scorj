@@ -20,4 +20,5 @@ pytest
 pytest-asyncio
 requests
 beautifulsoup4
-networkx 
+networkx
+openai 

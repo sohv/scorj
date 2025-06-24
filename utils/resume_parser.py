@@ -13,19 +13,18 @@ class ResumeParser:
             'certifications': r'(?i)(certifications|certificates)'
         }
 
-    def parse_pdf(self, file_path: str) -> Dict[str, str]:
+    def parse_pdf(self, file) -> Dict[str, str]:
         """Extract text from PDF file and structure it into sections."""
         text = ""
-        with open(file_path, 'rb') as file:
-            pdf_reader = PyPDF2.PdfReader(file)
-            for page in pdf_reader.pages:
-                text += page.extract_text()
+        pdf_reader = PyPDF2.PdfReader(file)
+        for page in pdf_reader.pages:
+            text += page.extract_text()
         
         return self._structure_text(text)
 
-    def parse_docx(self, file_path: str) -> Dict[str, str]:
+    def parse_docx(self, file) -> Dict[str, str]:
         """Extract text from DOCX file and structure it into sections."""
-        doc = Document(file_path)
+        doc = Document(file)
         text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
         return self._structure_text(text)
 

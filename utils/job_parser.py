@@ -38,9 +38,9 @@ class JobDescriptionParser:
         """Validate if the URL is a LinkedIn job posting."""
         parsed_url = urlparse(url)
         return (
-            parsed_url.netloc == 'www.linkedin.com' or 
-            parsed_url.netloc == 'linkedin.com'
-        ) and '/jobs/view/' in url
+            (parsed_url.netloc == 'www.linkedin.com' or parsed_url.netloc == 'linkedin.com') and
+            ('/jobs/view/' in url or '/jobs/collections/' in url)
+        )
 
     def _extract_title(self, soup: BeautifulSoup) -> str:
         """Extract job title from the page."""
