@@ -46,7 +46,6 @@ cp .env.example .env
 
 4. Run the development server:
 ```bash
-
 cd backend # backend
 uvicorn main:app --reload
 
