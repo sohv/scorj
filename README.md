@@ -46,21 +46,18 @@ cp .env.example .env
 
 4. Run the development server:
 ```bash
-# Backend
-cd backend
+
+cd backend # backend
 uvicorn main:app --reload
 
-# Frontend
-cd frontend
+cd frontend # frontend
 npm install
 npm start
 
-# Streamlit
-cd streamlit_app
+cd streamlit_app # streamlit
 streamlit run app.py
 
-# Gradio
-cd gradio_app
+cd gradio_app # gradio
 python app.py
 ```
 
@@ -77,5 +74,3 @@ Create a `.env` file in the root directory:
 API_URL=http://localhost:8000
 OPENAI_API_KEY=your-openai-api-key-here
 ```
-
-4. **Start the Backend Server**:
