@@ -8,7 +8,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class ScoringEngine:
     def __init__(self):
-        self.model = "gpt-4.1"
+        self.model = "gpt-4o-mini"
 
     def _create_prompt(self, resume_data: Dict[str, Any], job_data: Dict[str, Any]) -> str:
         
@@ -21,8 +21,18 @@ class ScoringEngine:
         1. "overall_score": A single integer score from 0 to 100.
         2. "summary": A brief one-sentence summary of the candidate's fit for the role.
         3. "strengths": A list of key strengths from the resume that align with the job description.
-        4. "areas_for_improvement": A list of areas where the resume could be improved to better match the job.
-        5. "missing_keywords": A list of important keywords or skills from the job description that are missing from the resume.
+        4. "areas_for_improvement": A list of specific areas where the resume could be improved to better match the job.
+        5. "missing_keywords": A list of important skills, technologies, or keywords from the job description that are missing from the resume. Only include skills that are explicitly mentioned in the job description.
+        6. "matching_skills": A list of skills from the resume that directly match requirements in the job description.
+
+        Focus on:
+        - Technical skills and technologies mentioned in the job description
+        - Experience levels and requirements
+        - Domain knowledge and industry experience
+        - Soft skills and qualifications
+        - Specific tools, frameworks, and methodologies
+
+        Be specific and avoid generic feedback. Only mention missing skills that are actually required in the job description.
 
         ---
         RESUME:

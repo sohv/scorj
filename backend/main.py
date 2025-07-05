@@ -31,13 +31,17 @@ scoring_engine = ScoringEngine()
 @app.post("/resume/score")
 async def score_resume(
     resume: UploadFile = File(...),
-    job_url: str = Form(...)
+    job_url: Optional[str] = Form(None),
+    job_description: Optional[str] = Form(None)
 ):
     """Score a resume against a job description."""
     
-    # Validate job URL
-    if not job_url or not job_url.strip():
-        raise HTTPException(status_code=400, detail="Job URL is required")
+    # Validate that either job_url or job_description is provided
+    if not job_url and not job_description:
+        raise HTTPException(status_code=400, detail="Either job URL or job description is required")
+    
+    if job_url and job_description:
+        raise HTTPException(status_code=400, detail="Please provide either job URL or job description, not both")
     
     # Validate file
     if not resume.filename:
@@ -67,14 +71,22 @@ async def score_resume(
     
     # Parse job description
     try:
-        job_data = job_parser.parse_linkedin_job(job_url.strip())
-        
-        # Validate job parsing
-        if not job_data:
-            raise HTTPException(status_code=400, detail="Could not parse job description from URL")
+        if job_url:
+            job_data = job_parser.parse_linkedin_job(job_url.strip())
+            
+            # Validate job parsing
+            if not job_data:
+                raise HTTPException(status_code=400, detail="Could not parse job description from URL")
+        else:
+            # Handle pasted job description
+            job_data = job_parser.parse_job_description_text(job_description.strip())
+            
+            # Validate job parsing
+            if not job_data:
+                raise HTTPException(status_code=400, detail="Could not parse job description text")
             
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error parsing job URL: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error parsing job description: {str(e)}")
     
     # Calculate score
     try:
