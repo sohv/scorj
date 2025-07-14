@@ -3,9 +3,14 @@ from bs4 import BeautifulSoup
 from typing import Dict, List, Optional
 import re
 from urllib.parse import urlparse
+import os
+import json
+from openai import OpenAI
 
 class JobDescriptionParser:
     def __init__(self):
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.model = "gpt-4o-mini"
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -44,8 +49,10 @@ class JobDescriptionParser:
                 'company': company,
                 'location': location,
                 'description': description,
-                'requirements': self._extract_requirements(soup),
-                'benefits': self._extract_benefits(soup)
+                'requirements': self._extract_requirements_openai(description),
+                'benefits': self._extract_benefits(soup),
+                'skills': self._extract_skills_openai(description),
+                'experience_level': self._extract_experience_level_openai(description)
             }
             
             # Validate that we got some meaningful data
@@ -188,7 +195,7 @@ class JobDescriptionParser:
         return "Job description not available"
 
     def _extract_requirements(self, soup: BeautifulSoup) -> List[str]:
-        """Extract job requirements from the page."""
+        """Extract job requirements from the page (fallback method)."""
         requirements = []
         req_section = soup.find('div', string=re.compile(r'(?i)requirements|qualifications'))
         if req_section:
@@ -206,14 +213,128 @@ class JobDescriptionParser:
         return benefits
 
     def extract_skills(self, description: str) -> List[str]:
-        """Extract required skills from job description."""
-        # This method is kept for backward compatibility
-        # The actual skill analysis is now done by the LLM in the scoring engine
-        # after we extract the full job description text using BeautifulSoup
-        return []
+        """Extract required skills from job description using OpenAI."""
+        return self._extract_skills_openai(description)
+
+    def _extract_skills_openai(self, description: str) -> List[str]:
+        """Extract skills using OpenAI."""
+        try:
+            prompt = f"""
+            Extract all required and preferred skills from this job description. Include:
+            - Programming languages
+            - Frameworks and libraries
+            - Tools and software
+            - Technical skills
+            - Methodologies
+            - Certifications
+            - Soft skills
+            - Industry-specific skills
+            
+            Return a JSON object with a "skills" array containing all relevant skills as strings.
+            
+            Job description:
+            {description}
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert at extracting skills and requirements from job descriptions. Return structured JSON data."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            return result.get('skills', [])
+            
+        except Exception as e:
+            print(f"OpenAI skill extraction failed: {e}")
+            return []
+
+    def _extract_requirements_openai(self, description: str) -> List[str]:
+        """Extract job requirements using OpenAI."""
+        try:
+            prompt = f"""
+            Extract the key requirements from this job description. Focus on:
+            - Must-have qualifications
+            - Required experience
+            - Essential skills
+            - Educational requirements
+            - Certifications needed
+            
+            Return a JSON object with a "requirements" array containing concise requirement statements.
+            
+            Job description:
+            {description}
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert at extracting job requirements. Return structured JSON data."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            return result.get('requirements', [])
+            
+        except Exception as e:
+            print(f"OpenAI requirements extraction failed: {e}")
+            return []
 
     def extract_experience_level(self, description: str) -> str:
-        """Extract required experience level from job description."""
+        """Extract required experience level from job description using OpenAI."""
+        return self._extract_experience_level_openai(description)
+
+    def _extract_experience_level_openai(self, description: str) -> str:
+        """Extract experience level using OpenAI."""
+        try:
+            prompt = f"""
+            Analyze this job description and determine the required experience level. 
+            Return one of these exact values: "entry", "mid", "senior", or "not specified"
+            
+            Guidelines:
+            - "entry": 0-2 years, junior positions, entry-level, new grad
+            - "mid": 3-6 years, intermediate, mid-level
+            - "senior": 7+ years, senior, lead, principal positions
+            - "not specified": if experience level is unclear or not mentioned
+            
+            Return a JSON object with "experience_level" key.
+            
+            Job description:
+            {description}
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert at analyzing job requirements. Return structured JSON data."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            level = result.get('experience_level', 'not specified')
+            
+            # Validate the response
+            if level in ['entry', 'mid', 'senior', 'not specified']:
+                return level
+            else:
+                return 'not specified'
+                
+        except Exception as e:
+            print(f"OpenAI experience level extraction failed, falling back to regex: {e}")
+            return self._extract_experience_level_regex(description)
+
+    def _extract_experience_level_regex(self, description: str) -> str:
+        """Fallback regex-based experience level extraction."""
         experience_patterns = {
             'entry': r'(?i)(entry|junior|0-2|1-2|1-3)',
             'mid': r'(?i)(mid|intermediate|3-5|4-6)',
@@ -246,6 +367,9 @@ class JobDescriptionParser:
             # Extract skills
             skills = self.extract_skills(text)
             
+            # Extract requirements
+            requirements = self._extract_requirements_openai(text)
+            
             # The full description is the entire text
             description = text.strip()
             
@@ -254,8 +378,9 @@ class JobDescriptionParser:
                 'company': company,
                 'location': location,
                 'description': description,
-                'requirements': skills,
+                'requirements': requirements,
                 'benefits': [],
+                'skills': skills,
                 'experience_level': experience
             }
         except Exception as e:

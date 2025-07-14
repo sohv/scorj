@@ -2,9 +2,16 @@ import PyPDF2
 from docx import Document
 from typing import Dict, List, Optional
 import re
+import os
+import json
+from openai import OpenAI
 
 class ResumeParser:
     def __init__(self):
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.model = "gpt-4o-mini"
+        
+        # Keep sections for fallback, but primarily use OpenAI
         self.sections = {
             'education': r'(?i)(education|academic|qualification)',
             'experience': r'(?i)(experience|work|employment)',
@@ -29,10 +36,81 @@ class ResumeParser:
         return self._structure_text(text)
 
     def _structure_text(self, text: str) -> Dict[str, str]:
-        """Structure the extracted text into sections."""
+        """Structure the extracted text into sections using OpenAI."""
+        try:
+            prompt = f"""
+            Analyze the following resume text and extract structured information. Return a JSON object with the following structure:
+            {{
+                "sections": {{
+                    "education": "education section content",
+                    "experience": "work experience section content", 
+                    "skills": "skills section content",
+                    "projects": "projects section content",
+                    "certifications": "certifications section content"
+                }},
+                "skills": ["skill1", "skill2", "skill3"],
+                "experience": [
+                    {{
+                        "title": "job title",
+                        "company": "company name",
+                        "date": "employment period",
+                        "description": "job description"
+                    }}
+                ],
+                "education": [
+                    {{
+                        "degree": "degree name",
+                        "institution": "school name",
+                        "date": "graduation date",
+                        "description": "additional details"
+                    }}
+                ]
+            }}
+            
+            Extract all relevant skills, including technical skills, programming languages, frameworks, tools, methodologies, and soft skills.
+            For experience, extract job titles, companies, employment periods, and detailed descriptions.
+            For education, extract degrees, institutions, graduation dates, and any relevant details.
+            
+            Resume text:
+            {text}
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert resume parser that extracts structured information from resumes. Always return valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1
+            )
+            
+            parsed_data = json.loads(response.choices[0].message.content)
+            
+            # Combine with full text
+            structured_text = {
+                'full_text': text,
+                'sections': parsed_data.get('sections', {}),
+                'skills': parsed_data.get('skills', []),
+                'experience': parsed_data.get('experience', []),
+                'education': parsed_data.get('education', [])
+            }
+            
+            return structured_text
+            
+        except Exception as e:
+            print(f"OpenAI parsing failed, falling back to regex: {e}")
+            # Fallback to original regex-based method
+            return self._structure_text_regex(text)
+
+    def _structure_text_regex(self, text: str) -> Dict[str, str]:
+        """Fallback regex-based text structuring."""
         structured_text = {
             'full_text': text,
-            'sections': {}
+            'sections': {},
+            'skills': [],
+            'experience': [],
+            'education': []
         }
 
         # Split text into lines
@@ -66,7 +144,44 @@ class ResumeParser:
         return structured_text
 
     def extract_skills(self, text: str) -> List[str]:
-        """Extract skills from the text using common patterns."""
+        """Extract skills from the text using OpenAI."""
+        try:
+            prompt = f"""
+            Extract all skills from the following resume text. Include:
+            - Programming languages
+            - Frameworks and libraries
+            - Tools and software
+            - Technical skills
+            - Methodologies (Agile, Scrum, etc.)
+            - Certifications
+            - Soft skills
+            - Industry-specific skills
+            
+            Return a JSON array of skills as strings.
+            
+            Resume text:
+            {text}
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert at extracting skills from resumes. Return only a JSON array of skill strings."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            return result.get('skills', [])
+            
+        except Exception as e:
+            print(f"OpenAI skill extraction failed, falling back to regex: {e}")
+            return self._extract_skills_regex(text)
+
+    def _extract_skills_regex(self, text: str) -> List[str]:
+        """Fallback regex-based skill extraction."""
         # Common skill patterns
         skill_patterns = [
             r'(?i)(python|java|javascript|typescript|react|angular|vue|node\.js|express|django|flask|fastapi)',
@@ -85,7 +200,39 @@ class ResumeParser:
         return list(skills)
 
     def extract_experience(self, text: str) -> List[Dict[str, str]]:
-        """Extract work experience entries from the text."""
+        """Extract work experience entries from the text using OpenAI."""
+        try:
+            prompt = f"""
+            Extract work experience from the following resume text. Return a JSON object with an "experience" array containing work experience entries.
+            Each entry should have:
+            - title: job title/position
+            - company: company name
+            - date: employment period (e.g., "2020-2023" or "Jan 2020 - Present")
+            - description: job responsibilities and achievements
+            
+            Resume text:
+            {text}
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert at extracting work experience from resumes. Return structured JSON data."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            return result.get('experience', [])
+            
+        except Exception as e:
+            print(f"OpenAI experience extraction failed, falling back to regex: {e}")
+            return self._extract_experience_regex(text)
+
+    def _extract_experience_regex(self, text: str) -> List[Dict[str, str]]:
+        """Fallback regex-based experience extraction."""
         # This is a basic implementation. You might want to enhance it with more sophisticated parsing
         experience_entries = []
         lines = text.split('\n')
