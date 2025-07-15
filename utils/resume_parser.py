@@ -10,8 +10,6 @@ class ResumeParser:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.model = "gpt-4o-mini"
-        
-        # Keep sections for fallback, but primarily use OpenAI
         self.sections = {
             'education': r'(?i)(education|academic|qualification)',
             'experience': r'(?i)(experience|work|employment)',
@@ -21,7 +19,6 @@ class ResumeParser:
         }
 
     def parse_pdf(self, file) -> Dict[str, str]:
-        """Extract text from PDF file and structure it into sections."""
         text = ""
         pdf_reader = PyPDF2.PdfReader(file)
         for page in pdf_reader.pages:
@@ -30,13 +27,11 @@ class ResumeParser:
         return self._structure_text(text)
 
     def parse_docx(self, file) -> Dict[str, str]:
-        """Extract text from DOCX file and structure it into sections."""
         doc = Document(file)
         text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
         return self._structure_text(text)
 
     def _structure_text(self, text: str) -> Dict[str, str]:
-        """Structure the extracted text into sections using OpenAI."""
         try:
             prompt = f"""
             Analyze the following resume text and extract structured information. Return a JSON object with the following structure:
@@ -87,7 +82,6 @@ class ResumeParser:
             
             parsed_data = json.loads(response.choices[0].message.content)
             
-            # Combine with full text
             structured_text = {
                 'full_text': text,
                 'sections': parsed_data.get('sections', {}),
@@ -100,11 +94,9 @@ class ResumeParser:
             
         except Exception as e:
             print(f"OpenAI parsing failed, falling back to regex: {e}")
-            # Fallback to original regex-based method
             return self._structure_text_regex(text)
 
     def _structure_text_regex(self, text: str) -> Dict[str, str]:
-        """Fallback regex-based text structuring."""
         structured_text = {
             'full_text': text,
             'sections': {},
@@ -113,7 +105,7 @@ class ResumeParser:
             'education': []
         }
 
-        # Split text into lines
+        # split text into lines
         lines = text.split('\n')
         current_section = 'other'
         current_content = []
@@ -123,7 +115,6 @@ class ResumeParser:
             if not line:
                 continue
 
-            # Check if line matches any section header
             section_found = False
             for section, pattern in self.sections.items():
                 if re.search(pattern, line):
@@ -137,14 +128,12 @@ class ResumeParser:
             if not section_found:
                 current_content.append(line)
 
-        # Add the last section
         if current_content:
             structured_text['sections'][current_section] = '\n'.join(current_content)
 
         return structured_text
 
     def extract_skills(self, text: str) -> List[str]:
-        """Extract skills from the text using OpenAI."""
         try:
             prompt = f"""
             Extract all skills from the following resume text. Include:
@@ -182,7 +171,6 @@ class ResumeParser:
 
     def _extract_skills_regex(self, text: str) -> List[str]:
         """Fallback regex-based skill extraction."""
-        # Common skill patterns
         skill_patterns = [
             r'(?i)(python|java|javascript|typescript|react|angular|vue|node\.js|express|django|flask|fastapi)',
             r'(?i)(aws|azure|gcp|cloud|docker|kubernetes|terraform)',
@@ -200,7 +188,6 @@ class ResumeParser:
         return list(skills)
 
     def extract_experience(self, text: str) -> List[Dict[str, str]]:
-        """Extract work experience entries from the text using OpenAI."""
         try:
             prompt = f"""
             Extract work experience from the following resume text. Return a JSON object with an "experience" array containing work experience entries.
@@ -232,14 +219,12 @@ class ResumeParser:
             return self._extract_experience_regex(text)
 
     def _extract_experience_regex(self, text: str) -> List[Dict[str, str]]:
-        """Fallback regex-based experience extraction."""
-        # This is a basic implementation. You might want to enhance it with more sophisticated parsing
         experience_entries = []
         lines = text.split('\n')
         
         current_entry = {}
         for line in lines:
-            if re.search(r'(?i)(20\d{2}|19\d{2})', line):  # Year pattern
+            if re.search(r'(?i)(20\d{2}|19\d{2})', line):
                 if current_entry:
                     experience_entries.append(current_entry)
                 current_entry = {'date': line.strip()}

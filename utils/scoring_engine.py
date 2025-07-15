@@ -11,34 +11,30 @@ load_dotenv()
 
 class ScoringEngine:
     def __init__(self):
-        # Initialize the sentence transformer model
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
-        
-        # Initialize Gemini Pro
         genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
         self.gemini_model = genai.GenerativeModel('gemini-2.5-pro-preview-03-25')
 
     def create_embeddings(self, text: str) -> np.ndarray:
-        """Create embeddings for the given text."""
         return self.model.encode(text)
 
     def calculate_similarity(self, text1: str, text2: str) -> float:
-        """Calculate cosine similarity between two texts."""
+        """ cosine similarity between two texts."""
         embedding1 = self.create_embeddings(text1)
         embedding2 = self.create_embeddings(text2)
         return cosine_similarity([embedding1], [embedding2])[0][0]
 
     def calculate_score(self, resume_data: Dict, job_data: Dict) -> Tuple[float, Dict]:
-        """Calculate the overall score and detailed feedback."""
-        # Calculate different component scores
+        """ overall score and detailed feedback."""
+        # different component scores
         skill_score = self._calculate_skill_score(resume_data, job_data)
         experience_score = self._calculate_experience_score(resume_data, job_data)
         education_score = self._calculate_education_score(resume_data, job_data)
         
-        # Calculate semantic similarity scores
+        # semantic similarity scores
         semantic_scores = self._calculate_semantic_scores(resume_data, job_data)
         
-        # Calculate overall score (weighted average)
+        # overall score (weighted average)
         overall_score = (
             skill_score * 0.3 +
             experience_score * 0.3 +
@@ -117,12 +113,10 @@ class ScoringEngine:
         else:
             structured_score = 0.5
 
-        # Semantic scoring for experience descriptions
+        # semantic scoring for experience descriptions
         experience_text = ' '.join([exp.get('description', '') for exp in resume_experience])
         job_description = job_data.get('description', '')
         semantic_score = self.calculate_similarity(experience_text, job_description)
-
-        # Combine scores (60% structured, 40% semantic)
         return 0.6 * structured_score + 0.4 * semantic_score
 
     def _calculate_education_score(self, resume_data: Dict, job_data: Dict) -> float:
@@ -140,7 +134,7 @@ class ScoringEngine:
         job_description = job_data.get('description', '')
         semantic_score = self.calculate_similarity(education_text, job_description)
 
-        # Combine scores (70% structured, 30% semantic)
+        # combine scores (70% structured, 30% semantic)
         return 0.7 * structured_score + 0.3 * semantic_score
 
     def _generate_feedback(self, resume_data: Dict, job_data: Dict, scores: Dict) -> Dict:
@@ -171,14 +165,12 @@ class ScoringEngine:
         }
 
     def _extract_years(self, date_str: str) -> float:
-        """Extract years from date string."""
         try:
             return float(date_str.split('-')[0])
         except:
             return 0.0
 
     def _get_degree_level(self, degree: str) -> float:
-        """Get numerical level for degree."""
         degree = degree.lower()
         if 'phd' in degree or 'doctorate' in degree:
             return 4.0
@@ -192,7 +184,6 @@ class ScoringEngine:
             return 0.5
 
     def _extract_missing_skills(self, resume_data: Dict, job_data: Dict) -> List[str]:
-        """Extract skills that are in job description but not in resume."""
         resume_skills = set(resume_data.get('skills', []))
         job_skills = set(job_data.get('skills', []))
         return list(job_skills - resume_skills)

@@ -3,7 +3,6 @@ import json
 from openai import OpenAI
 from typing import Dict, Any, Tuple
 
-# set up OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class ScoringEngine:
