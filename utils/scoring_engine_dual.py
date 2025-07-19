@@ -1,7 +1,8 @@
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 from datetime import datetime
 import logging
+import asyncio
 
 from .scoring_engine_openai import ScoringEngine as OpenAIScoringEngine
 from .scoring_engine_gemini import GeminiScoringEngine
@@ -10,24 +11,54 @@ from .scoring_engine_gemini import GeminiScoringEngine
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class DualScoringEngine:
-    """Dual model scoring engine that uses both OpenAI and Gemini for comprehensive analysis."""
+class ScoringResult:
+    def __init__(self, result_dict: Dict[str, Any]):
+        self.raw_result = result_dict
+        self.score = result_dict.get('overall_score', 0)
+        self.final_score = result_dict.get('final_score', self.score)
+        self.confidence = self._calculate_confidence(result_dict)
+        self.error_occurred = result_dict.get('error_occurred', False)
+        self.provider = self._get_provider(result_dict)
+        
+    def _calculate_confidence(self, result: Dict[str, Any]) -> float:
+        if result.get('error_occurred', False):
+            return 0.0
+            
+        confidence_level = result.get('confidence_level', 'Medium').lower()
+        base_confidence = {
+            'high': 0.9,
+            'medium': 0.7,
+            'low': 0.4
+        }.get(confidence_level, 0.5)
+        
+        # Adjust based on score certainty (scores near extremes are more confident)
+        score = self.score
+        if score >= 85 or score <= 25:
+            base_confidence += 0.1
+        elif 40 <= score <= 70:
+            base_confidence -= 0.1
+            
+        # Adjust based on data completeness
+        transparency = result.get('transparency', {})
+        if transparency.get('validation', {}).get('fallback_used', False):
+            base_confidence -= 0.2
+            
+        return max(0.1, min(1.0, base_confidence))
     
+    def _get_provider(self, result: Dict[str, Any]) -> str:
+        if 'openai_results' in result:
+            return 'OpenAI'
+        elif 'gemini_results' in result:
+            return 'Gemini'
+        else:
+            return 'Unknown'
+
+class DualScoringEngine:
     def __init__(self):
         self.openai_engine = OpenAIScoringEngine()
         self.gemini_engine = GeminiScoringEngine()
 
     def calculate_score(self, resume_data: Dict[str, Any], job_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Calculate comprehensive resume score using both OpenAI and Gemini with transparency.
-        
-        Args:
-            resume_data: Parsed resume data from ResumeParser
-            job_data: Parsed job data from JobParser
-            
-        Returns:
-            Dict containing dual-model scores, analysis, and transparency information
-        """
         try:
             logger.info("Starting dual-model resume scoring...")
             start_time = datetime.now()
@@ -41,22 +72,24 @@ class DualScoringEngine:
             
             # Get OpenAI analysis
             openai_result = self.openai_engine.calculate_score(resume_data, job_data)
-            openai_score = openai_result.get('overall_score', 0)
-            openai_processing = openai_result.get('openai_results', {}).get('processing_info', {})
+            openai_scoring_result = ScoringResult(openai_result)
             
-            # Get Gemini analysis
+            # Get Gemini analysis  
             try:
-                gemini_result, gemini_processing = self.gemini_engine.calculate_score(resume_data, job_data, structured_analysis)
-                gemini_score = gemini_result.get('overall_score', 0)
+                gemini_result = self.gemini_engine.calculate_score(resume_data, job_data, structured_analysis)
+                gemini_scoring_result = ScoringResult(gemini_result)
             except Exception as e:
                 logger.error(f"Gemini analysis failed: {e}")
-                gemini_result = self.gemini_engine._create_error_response(str(e))
-                gemini_processing = {'error': True, 'provider': 'Gemini'}
-                gemini_score = 0
+                error_result = self.gemini_engine._create_standardized_error_response(
+                    self.gemini_engine._create_error_response(str(e)),
+                    {'error': True, 'provider': 'Gemini'}
+                )
+                gemini_scoring_result = ScoringResult(error_result)
             
-            # Phase 3: Combine AI Results
-            logger.info("Phase 3: Combining AI results and creating consensus...")
-            combined_analysis = self._combine_ai_scores(openai_result, gemini_result, structured_analysis)
+            # Phase 3: Combine AI Results with intelligent scoring
+            logger.info("Phase 3: Combining AI results with intelligent consensus...")
+            scoring_results = [openai_scoring_result, gemini_scoring_result]
+            combined_analysis = self._intelligent_score_combination(scoring_results, structured_analysis)
             
             # Phase 4: Final Score Calculation
             final_score = combined_analysis.get('overall_score', 0)
@@ -71,11 +104,11 @@ class DualScoringEngine:
                 'dual_model_results': {
                     'openai': {
                         'result': openai_result,
-                        'processing_info': openai_processing
+                        'processing_info': openai_result.get('openai_results', {}).get('processing_info', {})
                     },
                     'gemini': {
                         'result': gemini_result,
-                        'processing_info': gemini_processing
+                        'processing_info': gemini_result.get('gemini_results', {}).get('processing_info', {})
                     }
                 },
                 'transparency': {
@@ -84,15 +117,16 @@ class DualScoringEngine:
                     'timestamp': datetime.now().isoformat(),
                     'score_components': {
                         'structured_score': structured_analysis.get('structured_score', 0),
-                        'openai_score': openai_score if not openai_result.get('error_occurred') else 0,
-                        'gemini_score': gemini_score if not gemini_result.get('error_occurred') else 0,
+                        'openai_score': openai_scoring_result.score if not openai_scoring_result.error_occurred else 0,
+                        'gemini_score': gemini_scoring_result.score if not gemini_scoring_result.error_occurred else 0,
                         'final_combined_score': final_score
                     },
                     'validation': {
                         'models_agreement': combined_analysis.get('ai_comparison', {}).get('consensus_level', 'Unknown'),
                         'score_variance': combined_analysis.get('ai_comparison', {}).get('score_variance'),
-                        'both_models_available': not (openai_result.get('error_occurred') or gemini_result.get('error_occurred')),
-                        'fallback_used': openai_result.get('error_occurred') and gemini_result.get('error_occurred')
+                        'both_models_available': not (openai_scoring_result.error_occurred or gemini_scoring_result.error_occurred),
+                        'fallback_used': openai_scoring_result.error_occurred and gemini_scoring_result.error_occurred,
+                        'confidence_weighted_scoring': True
                     }
                 }
             }
@@ -111,115 +145,200 @@ class DualScoringEngine:
                 'error_message': str(e)
             }
 
-    def _combine_ai_scores(self, openai_result: Dict[str, Any], gemini_result: Dict[str, Any], structured_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Combine scores from both AI providers."""
+    def _intelligent_score_combination(self, scoring_results: List[ScoringResult], structured_analysis: Dict[str, Any]) -> Dict[str, Any]:
         
-        # Extract scores
-        openai_score = openai_result.get('overall_score', 0) if not openai_result.get('error_occurred') else 0
-        gemini_score = gemini_result.get('overall_score', 0) if not gemini_result.get('error_occurred') else 0
+        # Filter out error results and calculate weighted score
+        valid_results = [r for r in scoring_results if not r.error_occurred and r.score > 0]
         
-        # Calculate combined metrics
-        if openai_score > 0 and gemini_score > 0:
-            # Both models provided scores
-            combined_score = int((openai_score + gemini_score) / 2)
-            score_variance = abs(openai_score - gemini_score)
-            consensus_level = "High" if score_variance <= 10 else "Medium" if score_variance <= 20 else "Low"
-        elif openai_score > 0:
-            # Only OpenAI provided a score
-            combined_score = openai_score
+        if len(valid_results) >= 2:
+            # Both models provided scores - use confidence-weighted average
+            weighted_sum = sum(r.score * r.confidence for r in valid_results)
+            total_confidence = sum(r.confidence for r in valid_results)
+            combined_score = int(weighted_sum / total_confidence) if total_confidence > 0 else 0
+            
+            # Calculate variance and consensus using coefficient of variation
+            scores = [r.score for r in valid_results]
+            mean_score = sum(scores) / len(scores)
+            variance = sum((s - mean_score) ** 2 for s in scores) / len(scores)
+            std_dev = variance ** 0.5
+            coefficient_of_variation = (std_dev / mean_score) if mean_score > 0 else 1.0
+            
+            # More sophisticated consensus assessment
+            if coefficient_of_variation <= 0.1:  # ≤10% variation
+                consensus_level = "Very High"
+            elif coefficient_of_variation <= 0.2:  # ≤20% variation
+                consensus_level = "High" 
+            elif coefficient_of_variation <= 0.35:  # ≤35% variation
+                consensus_level = "Medium"
+            elif coefficient_of_variation <= 0.5:  # ≤50% variation
+                consensus_level = "Low"
+            else:
+                consensus_level = "Very Low"
+                
+            score_variance = std_dev
+            
+        elif len(valid_results) == 1:
+            # Single model provided score
+            result = valid_results[0]
+            combined_score = result.score
             score_variance = None
-            consensus_level = "Single Model (OpenAI)"
-        elif gemini_score > 0:
-            # Only Gemini provided a score
-            combined_score = gemini_score
-            score_variance = None
-            consensus_level = "Single Model (Gemini)"
+            consensus_level = f"Single Model ({result.provider})"
+            
         else:
-            # Both failed, use structured analysis fallback
+            # Both failed, use structured analysis fallback with improved weighting
             skills_score = structured_analysis.get('skills_analysis', {}).get('skills_match_percentage', 0)
-            experience_score = structured_analysis.get('experience_analysis', {}).get('level_match_score', 0)
-            education_score = structured_analysis.get('education_analysis', {}).get('degree_level_score', 0)
-            combined_score = int(skills_score * 0.5 + experience_score * 0.3 + education_score * 0.2)
+            experience_analysis = structured_analysis.get('experience_analysis', {})
+            experience_score = experience_analysis.get('level_match_score', 50)
+            education_score = structured_analysis.get('education_analysis', {}).get('degree_level_score', 50)
+            
+            # More balanced fallback weighting (matches individual engine weights)
+            combined_score = int(
+                skills_score * 0.35 +          # Skills match (35%)
+                experience_score * 0.30 +      # Experience (30%) 
+                education_score * 0.15 +       # Education (15%)
+                0 * 0.20                       # Domain expertise (20% - unavailable in fallback)
+            )
             score_variance = None
             consensus_level = "Fallback Only"
         
-        # Combine qualitative feedback (prefer non-error responses)
-        primary_result = openai_result if not openai_result.get('error_occurred') else gemini_result
-        if primary_result.get('error_occurred'):
-            primary_result = self._create_fallback_qualitative_response(structured_analysis)
+        # Select best qualitative feedback intelligently
+        primary_result = self._select_primary_result(scoring_results, structured_analysis)
+        
+        # Enhanced agreement analysis
+        agreement_analysis = self._enhanced_agreement_analysis(scoring_results)
         
         # Create combined response
         combined_response = {
             **primary_result,
             "overall_score": combined_score,
             "ai_comparison": {
-                "openai_score": openai_score,
-                "gemini_score": gemini_score,
+                "openai_score": next((r.score for r in scoring_results if r.provider == 'OpenAI'), 0),
+                "gemini_score": next((r.score for r in scoring_results if r.provider == 'Gemini'), 0),
                 "score_variance": score_variance,
                 "consensus_level": consensus_level,
-                "agreement_analysis": self._analyze_agreement(openai_result, gemini_result)
+                "agreement_analysis": agreement_analysis,
+                "confidence_weights": {
+                    r.provider.lower(): r.confidence for r in scoring_results
+                }
             }
         }
         
         return combined_response
 
-    def _analyze_agreement(self, openai_result: Dict[str, Any], gemini_result: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze agreement between the two AI models."""
+    def _select_primary_result(self, scoring_results: List[ScoringResult], structured_analysis: Dict[str, Any]) -> Dict[str, Any]:
+        
+        # Find the result with highest confidence and no errors
+        valid_results = [r for r in scoring_results if not r.error_occurred]
+        
+        if not valid_results:
+            # Both failed - create enhanced fallback response
+            return self._create_enhanced_fallback_response(structured_analysis)
+        
+        # Select result with highest confidence
+        best_result = max(valid_results, key=lambda r: r.confidence)
+        return best_result.raw_result
+
+    def _enhanced_agreement_analysis(self, scoring_results: List[ScoringResult]) -> Dict[str, Any]:
+        
+        valid_results = [r for r in scoring_results if not r.error_occurred]
+        
         analysis = {
-            "both_available": not (openai_result.get('error_occurred') or gemini_result.get('error_occurred')),
+            "both_available": len(valid_results) >= 2,
+            "models_used": [r.provider for r in scoring_results],
+            "confidence_scores": {r.provider.lower(): r.confidence for r in scoring_results},
             "score_agreement": None,
             "qualitative_agreement": None
         }
         
-        if analysis["both_available"]:
-            openai_score = openai_result.get('overall_score', 0)
-            gemini_score = gemini_result.get('overall_score', 0)
-            score_diff = abs(openai_score - gemini_score)
+        if len(valid_results) >= 2:
+            # Calculate score agreement with statistical measures
+            scores = [r.score for r in valid_results]
+            mean_score = sum(scores) / len(scores)
+            max_deviation = max(abs(s - mean_score) for s in scores)
             
-            if score_diff <= 5:
+            # More nuanced agreement levels
+            if max_deviation <= 3:
+                analysis["score_agreement"] = "Exceptional"
+            elif max_deviation <= 7:
                 analysis["score_agreement"] = "Very High"
-            elif score_diff <= 10:
+            elif max_deviation <= 12:
                 analysis["score_agreement"] = "High"
-            elif score_diff <= 15:
+            elif max_deviation <= 18:
                 analysis["score_agreement"] = "Moderate"
-            elif score_diff <= 25:
+            elif max_deviation <= 25:
                 analysis["score_agreement"] = "Low"
             else:
                 analysis["score_agreement"] = "Very Low"
             
-            # Compare key qualitative aspects
-            openai_strengths = set(openai_result.get('strengths', []))
-            gemini_strengths = set(gemini_result.get('strengths', []))
-            strength_overlap = len(openai_strengths.intersection(gemini_strengths))
-            
-            analysis["qualitative_agreement"] = {
-                "strength_overlap": strength_overlap,
-                "total_strengths": len(openai_strengths.union(gemini_strengths)),
-                "agreement_percentage": (strength_overlap / max(len(openai_strengths.union(gemini_strengths)), 1)) * 100
-            }
+            # Enhanced qualitative comparison
+            try:
+                openai_result = next(r.raw_result for r in valid_results if r.provider == 'OpenAI')
+                gemini_result = next(r.raw_result for r in valid_results if r.provider == 'Gemini')
+                
+                # Compare multiple qualitative aspects
+                openai_strengths = set(openai_result.get('strengths', []))
+                gemini_strengths = set(gemini_result.get('strengths', []))
+                
+                openai_concerns = set(openai_result.get('concerns', []))
+                gemini_concerns = set(gemini_result.get('concerns', []))
+                
+                strength_overlap = len(openai_strengths.intersection(gemini_strengths))
+                concern_overlap = len(openai_concerns.intersection(gemini_concerns))
+                
+                total_unique_strengths = len(openai_strengths.union(gemini_strengths))
+                total_unique_concerns = len(openai_concerns.union(gemini_concerns))
+                
+                analysis["qualitative_agreement"] = {
+                    "strength_overlap": strength_overlap,
+                    "concern_overlap": concern_overlap,
+                    "total_strengths": total_unique_strengths,
+                    "total_concerns": total_unique_concerns,
+                    "strength_agreement_pct": (strength_overlap / max(total_unique_strengths, 1)) * 100,
+                    "concern_agreement_pct": (concern_overlap / max(total_unique_concerns, 1)) * 100
+                }
+            except (StopIteration, KeyError):
+                analysis["qualitative_agreement"] = {"error": "Could not compare qualitative aspects"}
         
         return analysis
 
-    def _create_fallback_qualitative_response(self, structured_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Create qualitative response from structured analysis when both AIs fail."""
+    def _create_enhanced_fallback_response(self, structured_analysis: Dict[str, Any]) -> Dict[str, Any]:
         skills_analysis = structured_analysis.get('skills_analysis', {})
         experience_analysis = structured_analysis.get('experience_analysis', {})
+        education_analysis = structured_analysis.get('education_analysis', {})
+        
+        # More intelligent fallback recommendations
+        missing_skills = skills_analysis.get('missing_skills', [])
+        matching_skills = skills_analysis.get('matching_skills', [])
+        skills_match_pct = skills_analysis.get('skills_match_percentage', 0)
+        
+        # Generate contextual recommendations
+        recommendations = []
+        if skills_match_pct < 50:
+            recommendations.append("Focus on developing technical skills mentioned in job requirements")
+        if missing_skills:
+            recommendations.extend([f"Consider gaining experience with {skill}" for skill in missing_skills[:3]])
+        recommendations.extend([
+            "Retry analysis when AI services are available", 
+            "Consider manual review by hiring manager"
+        ])
         
         return {
             "confidence_level": "Low",
             "score_breakdown": {
-                "skills_score": int(skills_analysis.get('skills_match_percentage', 0)),
+                "skills_score": int(skills_match_pct),
                 "experience_score": int(experience_analysis.get('level_match_score', 50)),
-                "education_score": int(structured_analysis.get('education_analysis', {}).get('degree_level_score', 50)),
+                "education_score": int(education_analysis.get('degree_level_score', 50)),
                 "domain_score": 0
             },
-            "match_category": "Analysis Limited - AI Unavailable",
-            "summary": "Analysis completed using structured data only due to AI service unavailability.",
-            "strengths": skills_analysis.get('matching_skills', [])[:3],
-            "concerns": ["Limited analysis depth", "AI services unavailable"],
-            "missing_skills": skills_analysis.get('missing_skills', []),
-            "matching_skills": skills_analysis.get('matching_skills', []),
+            "match_category": "Analysis Limited - AI Services Unavailable",
+            "summary": f"Structured analysis shows {skills_match_pct:.1f}% skills match. Limited depth due to AI service unavailability.",
+            "strengths": matching_skills[:3] if matching_skills else ["Analysis incomplete"],
+            "concerns": ["Limited analysis depth", "AI services unavailable"] + (["Significant skills gaps"] if skills_match_pct < 30 else []),
+            "missing_skills": missing_skills[:5],
+            "matching_skills": matching_skills,
             "experience_assessment": experience_analysis,
-            "recommendations": ["Retry when AI services are available", "Manual review recommended"],
-            "risk_factors": ["Incomplete analysis"]
+            "recommendations": recommendations[:5],  # Limit to 5 recommendations
+            "risk_factors": ["Incomplete analysis", "AI verification unavailable"]
         }
+
+

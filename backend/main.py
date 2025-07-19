@@ -5,6 +5,10 @@ import os
 from datetime import datetime
 import sys
 import io
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.resume_parser import ResumeParser

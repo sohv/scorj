@@ -5,34 +5,23 @@ from openai import OpenAI
 from typing import Dict, Any, Tuple, List
 from datetime import datetime
 import logging
+from dotenv import load_dotenv
+from .base_scoring_engine import BaseScoringEngine
+
+# Load environment variables
+load_dotenv()
 
 # set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class ScoringEngine:
+class ScoringEngine(BaseScoringEngine):
     def __init__(self):
+        super().__init__()  # Initialize base class
         self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.openai_model = "gpt-4o-mini"
-        
-        self.weights = {
-            'skills_match': 0.35,
-            'experience_match': 0.30,
-            'education_match': 0.15,
-            'domain_expertise': 0.20
-        }
-        
-        # Score thresholds for transparency
-        self.score_ranges = {
-            (90, 100): "Excellent Match - Strong candidate for the role",
-            (75, 89): "Good Match - Meets most requirements with minor gaps",
-            (60, 74): "Moderate Match - Some relevant experience, needs development",
-            (40, 59): "Weak Match - Significant gaps in required qualifications",
-            (0, 39): "Poor Match - Does not meet basic requirements"
-        }
 
     def _analyze_structured_data(self, resume_data: Dict[str, Any], job_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform structured analysis before LLM processing."""
         analysis = {
             'skills_analysis': {},
             'experience_analysis': {},
@@ -87,7 +76,6 @@ class ScoringEngine:
         return analysis
 
     def _calculate_experience_years(self, experience: List[Dict]) -> float:
-        """Calculate total years of experience from structured data."""
         total_years = 0
         current_year = datetime.now().year
         
@@ -99,7 +87,6 @@ class ScoringEngine:
         return total_years
 
     def _extract_years_from_date(self, date_str: str, current_year: int) -> float:
-        """Extract years of experience from date string."""
         if not date_str:
             return 0
             
@@ -127,7 +114,6 @@ class ScoringEngine:
         return 0
 
     def _evaluate_experience_level(self, years: float, required_level: str) -> Dict[str, Any]:
-        """Evaluate if experience matches required level."""
         level_requirements = {
             'entry': (0, 2),
             'mid': (3, 6),
@@ -152,101 +138,11 @@ class ScoringEngine:
             'level_match_score': 70  # Neutral score
         }
 
-    def _get_highest_degree(self, education: List[Dict]) -> str:
-        """Get the highest degree from education list."""
-        degree_hierarchy = {
-            'phd': 5, 'doctorate': 5, 'doctoral': 5,
-            'master': 4, 'masters': 4, 'mba': 4, 'ms': 4, 'ma': 4,
-            'bachelor': 3, 'bachelors': 3, 'bs': 3, 'ba': 3, 'be': 3,
-            'associate': 2, 'associates': 2,
-            'diploma': 1, 'certificate': 1
-        }
-        
-        highest_level = 0
-        highest_degree = 'No degree specified'
-        
-        for edu in education:
-            degree = edu.get('degree', '').lower()
-            for degree_type, level in degree_hierarchy.items():
-                if degree_type in degree and level > highest_level:
-                    highest_level = level
-                    highest_degree = edu.get('degree', degree_type)
-        
-        return highest_degree
-
-    def _get_degree_score(self, degree: str) -> int:
-        """Get numerical score for degree level."""
-        degree_lower = degree.lower()
-        if any(term in degree_lower for term in ['phd', 'doctorate', 'doctoral']):
-            return 100
-        elif any(term in degree_lower for term in ['master', 'mba', 'ms', 'ma']):
-            return 80
-        elif any(term in degree_lower for term in ['bachelor', 'bs', 'ba', 'be']):
-            return 60
-        elif any(term in degree_lower for term in ['associate']):
-            return 40
-        elif any(term in degree_lower for term in ['diploma', 'certificate']):
-            return 20
-        else:
-            return 0
             
     def _create_enhanced_prompt(self, resume_data: Dict[str, Any], job_data: Dict[str, Any], structured_analysis: Dict[str, Any]) -> str:
-        """Create an enhanced OpenAI prompt with structured context."""
-        
-        resume_text = resume_data.get('full_text', 'Not available')
-        job_description = job_data.get('description', 'Not available')
-        job_title = job_data.get('title', 'Not specified')
-        experience_level = job_data.get('experience_level', 'not specified')
-        
-        # Extract structured data for context
-        skills_analysis = structured_analysis.get('skills_analysis', {})
-        experience_analysis = structured_analysis.get('experience_analysis', {})
-        education_analysis = structured_analysis.get('education_analysis', {})
-        
-        prompt = f"""
-You are a senior technical recruiter with 15+ years of experience. Analyze this resume against the job requirements.
-
-**JOB CONTEXT:**
-Position: {job_title}
-Experience Level: {experience_level}
-
-**PRE-ANALYSIS DATA:**
-- Skills Match: {skills_analysis.get('skills_match_percentage', 0):.1f}%
-- Candidate Experience: {experience_analysis.get('total_years_experience', 0)} years
-- Education Level: {education_analysis.get('highest_degree', 'Not specified')}
-
-**SCORING CRITERIA:**
-Rate each category 0-100, then provide overall score:
-1. Technical Skills (35% weight): Depth and relevance of technical abilities
-2. Experience Relevance (30% weight): Years and quality of relevant experience
-3. Education & Qualifications (15% weight): Academic background and certifications
-4. Domain Expertise (20% weight): Industry knowledge and specialized skills
-
-**RESPONSE FORMAT:**
-Provide your analysis as valid JSON with these exact keys:
-{{"overall_score": <0-100>, "confidence_level": "High/Medium/Low", "score_breakdown": {{"skills_score": <0-100>, "experience_score": <0-100>, "education_score": <0-100>, "domain_score": <0-100>}}, "match_category": "<interpretation>", "summary": "<executive summary>", "strengths": ["<strength1>", "<strength2>"], "concerns": ["<concern1>", "<concern2>"], "missing_skills": ["<skill1>", "<skill2>"], "matching_skills": ["<skill1>", "<skill2>"], "experience_assessment": {{"relevant_years": <number>, "role_progression": "<assessment>", "industry_fit": "<assessment>"}}, "recommendations": ["<rec1>", "<rec2>"], "risk_factors": ["<risk1>", "<risk2>"]}}
-
-**RESUME:**
-{resume_text}
-
-**JOB DESCRIPTION:**
-{job_description}
-
-Provide only valid JSON in your response.
-        """
-        return prompt
+        return self._create_base_prompt(resume_data, job_data, structured_analysis, "OpenAI")
 
     def calculate_score(self, resume_data: Dict[str, Any], job_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Calculate comprehensive resume score using OpenAI with transparency.
-        
-        Args:
-            resume_data: Parsed resume data from ResumeParser
-            job_data: Parsed job data from JobParser
-            
-        Returns:
-            Dict containing OpenAI analysis and transparency information
-        """
         try:
             logger.info("Starting OpenAI resume scoring...")
             start_time = datetime.now()
@@ -340,7 +236,6 @@ Provide only valid JSON in your response.
             }
 
     def _create_error_response(self, error_message: str) -> Dict[str, Any]:
-        """Create an error response for failed OpenAI analysis."""
         return {
             "overall_score": 0,
             "confidence_level": "Low",
