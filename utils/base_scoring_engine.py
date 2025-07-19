@@ -20,13 +20,14 @@ class BaseScoringEngine:
             'domain_expertise': 0.20
         }
         
-        # Common score interpretation ranges
+        # Common score interpretation ranges - encourage full spectrum usage
         self.score_ranges = {
-            (90, 100): "Excellent Match - Strong candidate for the role",
-            (75, 89): "Good Match - Meets most requirements with minor gaps",
-            (60, 74): "Moderate Match - Some relevant experience, needs development",
-            (40, 59): "Weak Match - Significant gaps in required qualifications",
-            (0, 39): "Poor Match - Does not meet basic requirements"
+            (95, 100): "Exceptional Match - Rare top-tier candidate, exceeds requirements",
+            (85, 94): "Excellent Match - Strong candidate for the role, minor gaps only",
+            (70, 84): "Good Match - Meets most requirements with some development needed",
+            (55, 69): "Moderate Match - Mixed qualifications, requires significant development",
+            (35, 54): "Weak Match - Major gaps in required qualifications",
+            (0, 34): "Poor Match - Fundamentally misaligned with role requirements"
         }
 
     def _get_highest_degree(self, education: List[Dict]) -> str:
@@ -159,9 +160,19 @@ Use these exact weights for scoring:
 - Education & Qualifications (15%)
 - Domain Expertise (20%)
 
+**CRITICAL SCORING GUIDELINES:**
+- Score 90-100: Exceptional match, rare candidates who exceed most requirements
+- Score 75-89: Good match with minor gaps or slight overqualification  
+- Score 60-74: Moderate match requiring some development
+- Score 40-59: Weak match with significant gaps
+- Score 0-39: Poor match, fundamentally misaligned
+- Be decisive: if skills match is <30%, score should be <50
+- Be decisive: if skills match is >80% with good experience, score should be >85
+- Differentiate clearly between candidates - avoid "safe middle" scores
+
 **REQUIRED JSON OUTPUT:**
 Provide your analysis as valid JSON with these exact keys:
-1. "overall_score": integer 0-100
+1. "overall_score": integer 0-100 (use full range, be decisive)
 2. "confidence_level": "High"/"Medium"/"Low"
 3. "score_breakdown": {{"skills_score": 0-100, "experience_score": 0-100, "education_score": 0-100, "domain_score": 0-100}}
 4. "match_category": score interpretation based on overall_score
@@ -183,7 +194,7 @@ Provide your analysis as valid JSON with these exact keys:
 Return only valid JSON without any markdown formatting or code blocks.
 """
         return base_prompt
-
+# add this at the start of critical scoring guidelines --- Use the FULL 0-100 range - avoid clustering around 70-85
     def _create_standard_error_response(self, provider: str, error_message: str) -> Dict[str, Any]:
         return {
             "overall_score": 0,
