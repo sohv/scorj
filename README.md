@@ -73,7 +73,3 @@ Create a `.env` file in the root directory:
 API_URL=http://localhost:8000
 OPENAI_API_KEY=your-openai-api-key-here
 ```
-
-<footer>
-  <p>--- built by <a href="https://sohv.github.io">sv</a></p>
-</footer>
