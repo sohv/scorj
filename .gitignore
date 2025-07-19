@@ -3,3 +3,5 @@ venv/
 .env
 utils/__pycache__
 backend/__pycache__
+tests/__pycache__
+streamlit_app/__pycache__
