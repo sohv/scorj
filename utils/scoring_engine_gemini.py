@@ -85,9 +85,30 @@ Return only valid JSON.
         """
         return prompt
 
-    def calculate_score(self, resume_data: Dict[str, Any], job_data: Dict[str, Any], structured_analysis: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        """Score using Gemini."""
+    def calculate_score(self, resume_data: Dict[str, Any], job_data: Dict[str, Any], structured_analysis: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Calculate comprehensive resume score using Gemini with transparency.
+        
+        Args:
+            resume_data: Parsed resume data from ResumeParser
+            job_data: Parsed job data from JobParser
+            structured_analysis: Optional pre-computed structured analysis
+            
+        Returns:
+            Dict containing Gemini analysis and transparency information
+        """
         try:
+            logger.info("Starting Gemini resume scoring...")
+            start_time = datetime.now()
+            
+            # Use provided structured analysis or create minimal fallback
+            if structured_analysis is None:
+                structured_analysis = {
+                    'skills_analysis': {},
+                    'experience_analysis': {},
+                    'education_analysis': {}
+                }
+            
             prompt = self._create_gemini_prompt(resume_data, job_data, structured_analysis)
             
             response = self.model.generate_content(
@@ -111,7 +132,7 @@ Return only valid JSON.
                 response_text = response_text[:-3]  # Remove ```
             response_text = response_text.strip()
             
-            llm_response = json.loads(response_text)
+            gemini_result = json.loads(response_text)
             
             # Add processing info
             processing_info = {
@@ -121,16 +142,50 @@ Return only valid JSON.
                 'response_length': len(response.text) if response.text else 0
             }
             
-            logger.info(f"Gemini scoring completed. Score: {llm_response.get('overall_score', 0)}")
-            return llm_response, processing_info
+            # Phase 3: Final Score Calculation
+            final_score = gemini_result.get('overall_score', 0)
+            
+            # Phase 4: Create Comprehensive Response (matching OpenAI format)
+            processing_time = (datetime.now() - start_time).total_seconds()
+            
+            comprehensive_response = {
+                **gemini_result,
+                'final_score': final_score,
+                'structured_analysis': structured_analysis,
+                'gemini_results': {
+                    'result': gemini_result,
+                    'processing_info': processing_info
+                },
+                'transparency': {
+                    'methodology': 'Google Gemini + Structured Analysis',
+                    'processing_time_seconds': round(processing_time, 2),
+                    'timestamp': datetime.now().isoformat(),
+                    'score_components': {
+                        'structured_score': structured_analysis.get('structured_score', 0),
+                        'gemini_score': gemini_result.get('overall_score', 0) if not gemini_result.get('error_occurred') else 0,
+                        'final_score': final_score
+                    },
+                    'validation': {
+                        'gemini_available': not gemini_result.get('error_occurred', False),
+                        'fallback_used': gemini_result.get('error_occurred', False)
+                    }
+                }
+            }
+            
+            logger.info(f"Gemini resume scoring completed. Final score: {final_score}")
+            return comprehensive_response
             
         except json.JSONDecodeError as e:
             logger.error(f"Gemini JSON parsing failed. Raw response: {response.text if 'response' in locals() else 'No response'}")
             logger.error(f"JSON error: {e}")
-            return self._create_error_response(f"JSON parsing error: {str(e)}"), {'error': True, 'provider': 'Gemini'}
+            error_response = self._create_error_response(f"JSON parsing error: {str(e)}")
+            processing_info = {'error': True, 'provider': 'Gemini'}
+            return self._create_standardized_error_response(error_response, processing_info)
         except Exception as e:
             logger.error(f"Gemini scoring failed: {e}")
-            return self._create_error_response(str(e)), {'error': True, 'provider': 'Gemini'}
+            error_response = self._create_error_response(str(e))
+            processing_info = {'error': True, 'provider': 'Gemini'}
+            return self._create_standardized_error_response(error_response, processing_info)
 
     def _create_error_response(self, error_message: str) -> Dict[str, Any]:
         """Create an error response for failed Gemini analysis."""
@@ -149,6 +204,32 @@ Return only valid JSON.
             "risk_factors": ["Gemini analysis incomplete"],
             "error_occurred": True,
             "error_message": error_message
+        }
+
+    def _create_standardized_error_response(self, error_response: Dict[str, Any], processing_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Create standardized error response matching OpenAI format."""
+        return {
+            **error_response,
+            'final_score': 0,
+            'structured_analysis': {},
+            'gemini_results': {
+                'result': error_response,
+                'processing_info': processing_info
+            },
+            'transparency': {
+                'methodology': 'Google Gemini (Error State)',
+                'processing_time_seconds': 0,
+                'timestamp': datetime.now().isoformat(),
+                'score_components': {
+                    'structured_score': 0,
+                    'gemini_score': 0,
+                    'final_score': 0
+                },
+                'validation': {
+                    'gemini_available': False,
+                    'fallback_used': True
+                }
+            }
         }
 
     def _get_score_interpretation(self, score: int) -> Dict[str, str]:
