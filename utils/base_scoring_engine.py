@@ -144,46 +144,27 @@ class BaseScoringEngine:
         education_analysis = structured_analysis.get('education_analysis', {})
         
         base_prompt = f"""
-You are a senior technical recruiter with 15+ years of experience. Analyze this resume against the job requirements and provide comprehensive scoring.
+Analyze this resume against the job requirements and provide scoring based on skills match, experience relevance, education fit, and domain expertise.
 
-**JOB CONTEXT:**
-Position: {job_title}
-Experience Level: {experience_level}
-Pre-calculated Skills Match: {skills_analysis.get('skills_match_percentage', 0):.1f}%
+**POSITION:** {job_title} ({experience_level} level)
+
+**SCORING WEIGHTS:**
+- Skills Match: 35%
+- Experience: 30% 
+- Education: 15%
+- Domain Expertise: 20%
+
+**SCORING SCALE:**
+- 85-100: Strong match
+- 65-84: Good match  
+- 45-64: Moderate match
+- 25-44: Weak match
+- 0-24: Poor match
+
+**CONTEXT:**
+Skills Match: {skills_analysis.get('skills_match_percentage', 0):.1f}%
 Experience: {experience_analysis.get('total_years_experience', 0)} years
 Education: {education_analysis.get('highest_degree', 'Not specified')}
-
-**SCORING METHODOLOGY:**
-Use these exact weights for scoring:
-- Technical Skills Match (35%)
-- Experience Relevance (30%) 
-- Education & Qualifications (15%)
-- Domain Expertise (20%)
-
-**CRITICAL SCORING GUIDELINES:**
-- Score 90-100: Exceptional match, rare candidates who exceed most requirements
-- Score 75-89: Good match with minor gaps or slight overqualification  
-- Score 60-74: Moderate match requiring some development
-- Score 40-59: Weak match with significant gaps
-- Score 0-39: Poor match, fundamentally misaligned
-- Be decisive: if skills match is <30%, score should be <50
-- Be decisive: if skills match is >80% with good experience, score should be >85
-- Differentiate clearly between candidates - avoid "safe middle" scores
-
-**REQUIRED JSON OUTPUT:**
-Provide your analysis as valid JSON with these exact keys:
-1. "overall_score": integer 0-100 (use full range, be decisive)
-2. "confidence_level": "High"/"Medium"/"Low"
-3. "score_breakdown": {{"skills_score": 0-100, "experience_score": 0-100, "education_score": 0-100, "domain_score": 0-100}}
-4. "match_category": score interpretation based on overall_score
-5. "summary": brief executive summary (2-3 sentences)
-6. "strengths": list of key strengths (3-5 items)
-7. "concerns": list of concerns (2-4 items)
-8. "missing_skills": list of missing required skills
-9. "matching_skills": list of matching skills found
-10. "experience_assessment": {{"relevant_years": number, "role_progression": assessment, "industry_fit": assessment}}
-11. "recommendations": list of improvement suggestions (3-5 items)
-12. "risk_factors": list of potential hiring risks (2-3 items)
 
 **RESUME:**
 {resume_text}
@@ -191,10 +172,22 @@ Provide your analysis as valid JSON with these exact keys:
 **JOB DESCRIPTION:**
 {job_description}
 
-Return only valid JSON without any markdown formatting or code blocks.
+Return valid JSON with these keys:
+- overall_score (0-100)
+- confidence_level ("High"/"Medium"/"Low")
+- score_breakdown (skills_score, experience_score, education_score, domain_score)
+- match_category (based on score range above)
+- summary (2-3 sentences)
+- strengths (list)
+- concerns (list)
+- missing_skills (list)
+- matching_skills (list)
+- experience_assessment (relevant_years, role_progression, industry_fit)
+- recommendations (list)
+- risk_factors (list)
 """
         return base_prompt
-# add this at the start of critical scoring guidelines --- Use the FULL 0-100 range - avoid clustering around 70-85
+
     def _create_standard_error_response(self, provider: str, error_message: str) -> Dict[str, Any]:
         return {
             "overall_score": 0,
