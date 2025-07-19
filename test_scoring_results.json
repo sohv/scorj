@@ -1,58 +1,52 @@
 {
-  "overall_score": 72,
-  "confidence_level": "Medium",
+  "overall_score": 82,
+  "confidence_level": "High",
   "score_breakdown": {
-    "skills_score": 80,
-    "experience_score": 70,
-    "education_score": 90,
-    "domain_score": 60
+    "skills_score": 85,
+    "experience_score": 80,
+    "education_score": 100,
+    "domain_score": 75
   },
-  "match_category": "Moderate Fit",
-  "summary": "The candidate has a solid educational background and relevant technical skills, but lacks the required years of experience for a senior role. Their experience aligns well with the job requirements, but they may need to demonstrate more leadership and domain expertise.",
+  "match_category": "Good match with minor gaps or slight overqualification",
+  "summary": "John Doe is a strong candidate for the Senior Full Stack Developer position, demonstrating relevant technical skills and solid experience in web development. His educational background is excellent, but there are minor gaps in domain expertise related to Kubernetes.",
   "strengths": [
-    "Strong technical skills in Python, JavaScript, and React",
-    "Relevant educational qualifications with a Master's degree"
+    "Extensive experience in web development with relevant technologies",
+    "Strong proficiency in required programming languages (Python, JavaScript, React)",
+    "Solid educational background with a Master's degree in Computer Science",
+    "Experience in leading teams and mentoring junior developers",
+    "Familiarity with CI/CD processes and containerization"
   ],
   "concerns": [
-    "Only 5 years of experience, which is at the minimum requirement",
-    "Limited demonstrated leadership experience in a senior capacity"
+    "Lacks experience with Kubernetes, which is preferred for the role",
+    "Limited exposure to cross-functional collaboration as described in the job responsibilities"
   ],
   "missing_skills": [
-    "Kubernetes experience",
-    "Advanced cloud architecture knowledge"
+    "Kubernetes"
   ],
   "matching_skills": [
     "Python",
     "JavaScript",
     "React",
     "Docker",
-    "PostgreSQL"
+    "AWS",
+    "PostgreSQL",
+    "CI/CD pipelines"
   ],
   "experience_assessment": {
     "relevant_years": 5,
-    "role_progression": "Candidate has progressed from Software Engineer to Senior Software Developer, showing growth.",
-    "industry_fit": "Experience in web development aligns with the job requirements."
+    "role_progression": "Demonstrates a clear progression from Software Engineer to Senior Software Developer",
+    "industry_fit": "Experience aligns well with the requirements of the role"
   },
   "recommendations": [
-    "Highlight any leadership or mentoring experiences more prominently.",
-    "Consider gaining experience with Kubernetes and advanced cloud services."
+    "Gain experience with Kubernetes to enhance cloud service skills",
+    "Engage in more cross-functional projects to strengthen collaboration skills",
+    "Consider obtaining certifications related to cloud services or containerization"
   ],
   "risk_factors": [
-    "Potential lack of experience in a senior role may impact team dynamics.",
-    "Limited exposure to advanced cloud architecture could hinder project scalability."
+    "Potential lack of experience in specific technologies like Kubernetes",
+    "May require additional training in collaborative environments"
   ],
-  "ai_comparison": {
-    "openai_score": 72,
-    "gemini_score": 0,
-    "score_variance": null,
-    "consensus_level": "Single Model",
-    "agreement_analysis": {
-      "both_available": false,
-      "score_agreement": null,
-      "qualitative_agreement": null
-    }
-  },
-  "final_score": 72,
+  "final_score": 82,
   "structured_analysis": {
     "skills_analysis": {
       "total_required_skills": 16,
@@ -60,24 +54,24 @@
       "missing_skills_count": 10,
       "skills_match_percentage": 37.5,
       "matching_skills": [
-        "postgresql",
         "python",
         "aws",
         "docker",
-        "javascript",
-        "react"
+        "postgresql",
+        "react",
+        "javascript"
       ],
       "missing_skills": [
-        "code reviews",
         "communication",
-        "ci/cd",
-        "kubernetes",
+        "code reviews",
         "cross-functional collaboration",
-        "architecture decisions",
-        "scalable web applications",
+        "web development",
         "mentoring",
         "problem-solving",
-        "web development"
+        "ci/cd",
+        "architecture decisions",
+        "kubernetes",
+        "scalable web applications"
       ]
     },
     "experience_analysis": {
@@ -97,119 +91,82 @@
       "degree_level_score": 80
     },
     "metadata": {
-      "analysis_timestamp": "2025-07-19T13:58:15.937460",
+      "analysis_timestamp": "2025-07-20T02:59:01.190848",
       "resume_length": 816,
       "job_description_length": 789
     }
   },
-  "dual_model_results": {
-    "openai": {
-      "result": {
-        "overall_score": 72,
-        "confidence_level": "Medium",
-        "score_breakdown": {
-          "skills_score": 80,
-          "experience_score": 70,
-          "education_score": 90,
-          "domain_score": 60
-        },
-        "match_category": "Moderate Fit",
-        "summary": "The candidate has a solid educational background and relevant technical skills, but lacks the required years of experience for a senior role. Their experience aligns well with the job requirements, but they may need to demonstrate more leadership and domain expertise.",
-        "strengths": [
-          "Strong technical skills in Python, JavaScript, and React",
-          "Relevant educational qualifications with a Master's degree"
-        ],
-        "concerns": [
-          "Only 5 years of experience, which is at the minimum requirement",
-          "Limited demonstrated leadership experience in a senior capacity"
-        ],
-        "missing_skills": [
-          "Kubernetes experience",
-          "Advanced cloud architecture knowledge"
-        ],
-        "matching_skills": [
-          "Python",
-          "JavaScript",
-          "React",
-          "Docker",
-          "PostgreSQL"
-        ],
-        "experience_assessment": {
-          "relevant_years": 5,
-          "role_progression": "Candidate has progressed from Software Engineer to Senior Software Developer, showing growth.",
-          "industry_fit": "Experience in web development aligns with the job requirements."
-        },
-        "recommendations": [
-          "Highlight any leadership or mentoring experiences more prominently.",
-          "Consider gaining experience with Kubernetes and advanced cloud services."
-        ],
-        "risk_factors": [
-          "Potential lack of experience in a senior role may impact team dynamics.",
-          "Limited exposure to advanced cloud architecture could hinder project scalability."
-        ]
+  "openai_results": {
+    "result": {
+      "overall_score": 82,
+      "confidence_level": "High",
+      "score_breakdown": {
+        "skills_score": 85,
+        "experience_score": 80,
+        "education_score": 100,
+        "domain_score": 75
       },
-      "processing_info": {
-        "model_used": "gpt-4o-mini",
-        "provider": "OpenAI",
-        "processing_timestamp": "2025-07-19T13:58:21.357004",
-        "prompt_tokens": 774,
-        "completion_tokens": 364,
-        "total_tokens": 1138
-      }
+      "match_category": "Good match with minor gaps or slight overqualification",
+      "summary": "John Doe is a strong candidate for the Senior Full Stack Developer position, demonstrating relevant technical skills and solid experience in web development. His educational background is excellent, but there are minor gaps in domain expertise related to Kubernetes.",
+      "strengths": [
+        "Extensive experience in web development with relevant technologies",
+        "Strong proficiency in required programming languages (Python, JavaScript, React)",
+        "Solid educational background with a Master's degree in Computer Science",
+        "Experience in leading teams and mentoring junior developers",
+        "Familiarity with CI/CD processes and containerization"
+      ],
+      "concerns": [
+        "Lacks experience with Kubernetes, which is preferred for the role",
+        "Limited exposure to cross-functional collaboration as described in the job responsibilities"
+      ],
+      "missing_skills": [
+        "Kubernetes"
+      ],
+      "matching_skills": [
+        "Python",
+        "JavaScript",
+        "React",
+        "Docker",
+        "AWS",
+        "PostgreSQL",
+        "CI/CD pipelines"
+      ],
+      "experience_assessment": {
+        "relevant_years": 5,
+        "role_progression": "Demonstrates a clear progression from Software Engineer to Senior Software Developer",
+        "industry_fit": "Experience aligns well with the requirements of the role"
+      },
+      "recommendations": [
+        "Gain experience with Kubernetes to enhance cloud service skills",
+        "Engage in more cross-functional projects to strengthen collaboration skills",
+        "Consider obtaining certifications related to cloud services or containerization"
+      ],
+      "risk_factors": [
+        "Potential lack of experience in specific technologies like Kubernetes",
+        "May require additional training in collaborative environments"
+      ]
     },
-    "gemini": {
-      "result": {
-        "overall_score": 0,
-        "confidence_level": "Low",
-        "score_breakdown": {
-          "skills_score": 0,
-          "experience_score": 0,
-          "education_score": 0,
-          "domain_score": 0
-        },
-        "match_category": "Error - Gemini analysis failed",
-        "summary": "Analysis failed due to Gemini error: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-1.5-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\nviolations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerMinutePerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-1.5-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\nviolations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count\"\n  quota_id: \"GenerateContentInputTokensPerModelPerMinute-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-1.5-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\n, links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, retry_delay {\n  seconds: 37\n}\n]",
-        "strengths": [],
-        "concerns": [
-          "Gemini analysis unavailable"
-        ],
-        "missing_skills": [],
-        "matching_skills": [],
-        "experience_assessment": {
-          "relevant_years": 0,
-          "role_progression": "Unknown",
-          "industry_fit": "Unknown"
-        },
-        "recommendations": [
-          "Retry analysis when Gemini service is available"
-        ],
-        "risk_factors": [
-          "Gemini analysis incomplete"
-        ],
-        "error_occurred": true,
-        "error_message": "429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-1.5-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\nviolations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerMinutePerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-1.5-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\nviolations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count\"\n  quota_id: \"GenerateContentInputTokensPerModelPerMinute-FreeTier\"\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-1.5-pro\"\n  }\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n}\n, links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, retry_delay {\n  seconds: 37\n}\n]"
-      },
-      "processing_info": {
-        "error": true,
-        "provider": "Gemini"
-      }
+    "processing_info": {
+      "model_used": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "processing_timestamp": "2025-07-20T02:59:07.232191",
+      "prompt_tokens": 893,
+      "completion_tokens": 424,
+      "total_tokens": 1317
     }
   },
   "transparency": {
-    "methodology": "Dual AI (OpenAI + Gemini) + Structured Analysis",
-    "processing_time_seconds": 6.92,
-    "timestamp": "2025-07-19T13:58:22.860723",
+    "methodology": "OpenAI GPT + Structured Analysis",
+    "processing_time_seconds": 6.04,
+    "timestamp": "2025-07-20T02:59:07.232229",
     "score_components": {
       "structured_score": 0,
-      "openai_score": 72,
-      "gemini_score": 0,
-      "final_combined_score": 72
+      "openai_score": 82,
+      "final_score": 82
     },
     "validation": {
-      "models_agreement": "Single Model",
-      "score_variance": null,
-      "both_models_available": false,
-      "fallback_used": null
+      "openai_available": true,
+      "fallback_used": false
     }
   }
 }

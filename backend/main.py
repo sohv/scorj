@@ -251,6 +251,74 @@ async def get_available_models():
         "default_model": "dual"
     }
 
+# AI Chat endpoint for scoring insights
+@app.post("/ai/chat")
+async def chat_with_ai(
+    question: str = Form(...),
+    model: Optional[str] = Form("openai"),  # openai or gemini
+    context: Optional[str] = Form(None)  # Optional context about recent scoring
+):
+    """Chat with AI models to get insights about scoring decisions."""
+    
+    # Validate model choice
+    valid_models = ["openai", "gemini"]
+    if model not in valid_models:
+        raise HTTPException(status_code=400, detail=f"Invalid model choice. Must be one of: {valid_models}")
+    
+    try:
+        if model == "openai":
+            # Use OpenAI for chat
+            import openai
+            
+            # Prepare messages
+            messages = [
+                {
+                    "role": "system", 
+                    "content": "You are a senior technical recruiter AI assistant. Help users understand resume scoring decisions, provide career advice, and explain recruitment insights. Be concise, helpful, and professional."
+                },
+                {
+                    "role": "user",
+                    "content": f"Context: {context}\n\nQuestion: {question}" if context else question
+                }
+            ]
+            
+            client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages,
+                max_tokens=500,
+                temperature=0.7
+            )
+            
+            return {
+                "response": response.choices[0].message.content,
+                "model_used": "openai",
+                "success": True
+            }
+            
+        elif model == "gemini":
+            # Use Gemini for chat
+            import google.generativeai as genai
+            
+            genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+            gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+            
+            # Prepare prompt
+            system_prompt = "You are a senior technical recruiter AI assistant. Help users understand resume scoring decisions, provide career advice, and explain recruitment insights. Be concise, helpful, and professional."
+            
+            full_prompt = f"{system_prompt}\n\nContext: {context}\n\nQuestion: {question}" if context else f"{system_prompt}\n\nQuestion: {question}"
+            
+            response = gemini_model.generate_content(full_prompt)
+            
+            return {
+                "response": response.text,
+                "model_used": "gemini", 
+                "success": True
+            }
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error in AI chat: {str(e)}")
+
 # Alternative endpoint for debugging
 @app.get("/test")
 async def test_endpoint():
