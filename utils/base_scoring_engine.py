@@ -4,6 +4,9 @@ Base scoring engine with common functionality shared across all scoring engines.
 from typing import Dict, Any, List
 from datetime import datetime
 import logging
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # set up logging
 logging.basicConfig(level=logging.INFO)
@@ -12,7 +15,7 @@ logger = logging.getLogger(__name__)
 class BaseScoringEngine:
     
     def __init__(self):
-        # Common scoring weights across all engines
+        # Fixed scoring weights across all roles
         self.weights = {
             'skills_match': 0.35,
             'experience_match': 0.30,
@@ -20,14 +23,138 @@ class BaseScoringEngine:
             'domain_expertise': 0.20
         }
         
-        # Common score interpretation ranges - encourage full spectrum usage
+        # Simplified 3-tier scoring system
         self.score_ranges = {
-            (95, 100): "Exceptional Match - Rare top-tier candidate, exceeds requirements",
-            (85, 94): "Excellent Match - Strong candidate for the role, minor gaps only",
-            (70, 84): "Good Match - Meets most requirements with some development needed",
-            (55, 69): "Moderate Match - Mixed qualifications, requires significant development",
-            (35, 54): "Weak Match - Major gaps in required qualifications",
-            (0, 34): "Poor Match - Fundamentally misaligned with role requirements"
+            (70, 100): "Strong Match",
+            (40, 69): "Good Match", 
+            (0, 39): "Weak Match"
+        }
+        
+        # TF-IDF vectorizer for semantic skills matching
+        self.vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=1000)
+
+    def _semantic_skills_match(self, resume_skills: List[str], job_skills: List[str]) -> Dict[str, Any]:
+        """Calculate semantic skills matching using TF-IDF and cosine similarity"""
+        if not resume_skills or not job_skills:
+            return {'match_percentage': 0, 'matched_skills': [], 'missing_skills': job_skills}
+        
+        # Combine all skills for vectorization
+        all_skills = resume_skills + job_skills
+        
+        try:
+            # Create TF-IDF vectors
+            skill_vectors = self.vectorizer.fit_transform(all_skills)
+            
+            # Split vectors
+            resume_vectors = skill_vectors[:len(resume_skills)]
+            job_vectors = skill_vectors[len(resume_skills):]
+            
+            # Calculate similarity matrix
+            similarity_matrix = cosine_similarity(resume_vectors, job_vectors)
+            
+            # Find best matches
+            matched_skills = []
+            missing_skills = []
+            
+            for j, job_skill in enumerate(job_skills):
+                # Find best matching resume skill
+                best_match_idx = np.argmax(similarity_matrix[:, j])
+                best_similarity = similarity_matrix[best_match_idx, j]
+                
+                # Threshold for considering a match (0.3 is relatively permissive)
+                if best_similarity > 0.3:
+                    matched_skills.append({
+                        'job_skill': job_skill,
+                        'resume_skill': resume_skills[best_match_idx],
+                        'similarity': float(best_similarity)
+                    })
+                else:
+                    missing_skills.append(job_skill)
+            
+            match_percentage = (len(matched_skills) / len(job_skills)) * 100 if job_skills else 0
+            
+            return {
+                'match_percentage': match_percentage,
+                'matched_skills': matched_skills,
+                'missing_skills': missing_skills,
+                'total_job_skills': len(job_skills),
+                'total_resume_skills': len(resume_skills)
+            }
+            
+        except Exception as e:
+            logger.warning(f"Semantic matching failed, falling back to exact match: {e}")
+            return self._exact_skills_match(resume_skills, job_skills)
+
+    def _exact_skills_match(self, resume_skills: List[str], job_skills: List[str]) -> Dict[str, Any]:
+        """Fallback exact string matching"""
+        resume_set = set(skill.lower().strip() for skill in resume_skills)
+        job_set = set(skill.lower().strip() for skill in job_skills)
+        
+        matched = resume_set.intersection(job_set)
+        missing = job_set - resume_set
+        
+        match_percentage = (len(matched) / len(job_set)) * 100 if job_set else 0
+        
+        return {
+            'match_percentage': match_percentage,
+            'matched_skills': [{'job_skill': skill, 'resume_skill': skill, 'similarity': 1.0} for skill in matched],
+            'missing_skills': list(missing),
+            'total_job_skills': len(job_skills),
+            'total_resume_skills': len(resume_skills)
+        }
+
+    def _calculate_experience_relevance(self, experience: List[Dict], job_title: str, job_description: str) -> Dict[str, Any]:
+        """Calculate experience relevance with weighted scoring"""
+        if not experience:
+            return {'relevance_score': 0, 'relevant_years': 0, 'total_years': 0}
+        
+        total_years = 0
+        relevant_years = 0
+        
+        # Extract key job keywords
+        job_keywords = set()
+        for word in (job_title + " " + job_description).lower().split():
+            if len(word) > 3:  # Filter out short words
+                job_keywords.add(word)
+        
+        for exp in experience:
+            years = self._extract_years_from_date(exp.get('date', ''), datetime.now().year)
+            total_years += years
+            
+            # Check relevance based on title and description similarity
+            exp_title = exp.get('title', '').lower()
+            exp_desc = exp.get('description', '').lower()
+            
+            # Extract experience keywords
+            exp_keywords = set()
+            for word in (exp_title + " " + exp_desc).split():
+                if len(word) > 3:
+                    exp_keywords.add(word)
+            
+            # Calculate keyword overlap
+            overlap = len(job_keywords.intersection(exp_keywords))
+            total_job_keywords = len(job_keywords)
+            
+            # More generous relevance calculation
+            if total_job_keywords > 0:
+                relevance_factor = min(1.0, overlap / (total_job_keywords * 0.3))  # 30% overlap = 100% relevance
+            else:
+                relevance_factor = 0.5  # Default moderate relevance
+            
+            # Boost relevance for obvious title matches
+            if any(key in exp_title for key in ['engineer', 'developer', 'analyst', 'manager']):
+                if any(key in job_title.lower() for key in ['engineer', 'developer', 'analyst', 'manager']):
+                    relevance_factor = max(relevance_factor, 0.8)
+            
+            relevant_years += years * relevance_factor
+        
+        relevance_score = min(100, (relevant_years / max(1, total_years)) * 100)
+        
+        return {
+            'relevance_score': relevance_score,
+            'relevant_years': relevant_years,
+            'total_years': total_years,
+            'relevance_ratio': relevant_years / max(1, total_years)
         }
 
     def _get_highest_degree(self, education: List[Dict]) -> str:
@@ -144,27 +271,47 @@ class BaseScoringEngine:
         education_analysis = structured_analysis.get('education_analysis', {})
         
         base_prompt = f"""
-Analyze this resume against the job requirements and provide scoring based on skills match, experience relevance, education fit, and domain expertise.
+You are a senior technical recruiter with 15+ years of experience. Analyze this resume against the job requirements and provide comprehensive scoring.
 
-**POSITION:** {job_title} ({experience_level} level)
-
-**SCORING WEIGHTS:**
-- Skills Match: 35%
-- Experience: 30% 
-- Education: 15%
-- Domain Expertise: 20%
-
-**SCORING SCALE:**
-- 85-100: Strong match
-- 65-84: Good match  
-- 45-64: Moderate match
-- 25-44: Weak match
-- 0-24: Poor match
-
-**CONTEXT:**
-Skills Match: {skills_analysis.get('skills_match_percentage', 0):.1f}%
-Experience: {experience_analysis.get('total_years_experience', 0)} years
+**JOB CONTEXT:**
+Position: {job_title}
+Experience Level: {experience_level}
+Pre-calculated Skills Match: {skills_analysis.get('match_percentage', 0):.1f}%
+Experience: {experience_analysis.get('total_years', 0)} years
 Education: {education_analysis.get('highest_degree', 'Not specified')}
+
+**SCORING METHODOLOGY:**
+Use these exact weights for scoring:
+- Technical Skills Match (35%)
+- Experience Relevance (30%) 
+- Education & Qualifications (15%)
+- Domain Expertise (20%)
+
+**CRITICAL SCORING GUIDELINES:**
+- Use the FULL 0-100 range - avoid clustering around 70-85
+- Score 90-100: Exceptional match, rare candidates who exceed most requirements
+- Score 75-89: Good match with minor gaps or slight overqualification  
+- Score 60-74: Moderate match requiring some development
+- Score 40-59: Weak match with significant gaps
+- Score 0-39: Poor match, fundamentally misaligned
+- Be decisive: if skills match is <30%, score should be <50
+- Be decisive: if skills match is >80% with good experience, score should be >85
+- Differentiate clearly between candidates - avoid "safe middle" scores
+
+**REQUIRED JSON OUTPUT:**
+Provide your analysis as valid JSON with these exact keys:
+1. "overall_score": integer 0-100 (use full range, be decisive)
+2. "confidence_level": "High"/"Medium"/"Low"
+3. "score_breakdown": {{"skills_score": 0-100, "experience_score": 0-100, "education_score": 0-100, "domain_score": 0-100}}
+4. "match_category": score interpretation based on overall_score
+5. "summary": brief executive summary (2-3 sentences)
+6. "strengths": list of key strengths (3-5 items)
+7. "concerns": list of concerns (2-4 items)
+8. "missing_skills": list of missing required skills
+9. "matching_skills": list of matching skills found
+10. "experience_assessment": {{"relevant_years": number, "role_progression": assessment, "industry_fit": assessment}}
+11. "recommendations": list of improvement suggestions (3-5 items)
+12. "risk_factors": list of potential hiring risks (2-3 items)
 
 **RESUME:**
 {resume_text}
@@ -172,19 +319,7 @@ Education: {education_analysis.get('highest_degree', 'Not specified')}
 **JOB DESCRIPTION:**
 {job_description}
 
-Return valid JSON with these keys:
-- overall_score (0-100)
-- confidence_level ("High"/"Medium"/"Low")
-- score_breakdown (skills_score, experience_score, education_score, domain_score)
-- match_category (based on score range above)
-- summary (2-3 sentences)
-- strengths (list)
-- concerns (list)
-- missing_skills (list)
-- matching_skills (list)
-- experience_assessment (relevant_years, role_progression, industry_fit)
-- recommendations (list)
-- risk_factors (list)
+Return only valid JSON without any markdown formatting or code blocks.
 """
         return base_prompt
 

@@ -33,37 +33,39 @@ class ScoringEngine(BaseScoringEngine):
             }
         }
         
-        # Skills analysis
-        resume_skills = set(skill.lower().strip() for skill in resume_data.get('skills', []))
-        job_skills = set(skill.lower().strip() for skill in job_data.get('skills', []))
+        # Enhanced skills analysis with semantic matching
+        resume_skills = resume_data.get('skills', [])
+        job_skills = job_data.get('skills', [])
         
         if job_skills:
-            matching_skills = resume_skills.intersection(job_skills)
-            missing_skills = job_skills - resume_skills
-            
-            analysis['skills_analysis'] = {
-                'total_required_skills': len(job_skills),
-                'matching_skills_count': len(matching_skills),
-                'missing_skills_count': len(missing_skills),
-                'skills_match_percentage': (len(matching_skills) / len(job_skills)) * 100 if job_skills else 0,
-                'matching_skills': list(matching_skills),
-                'missing_skills': list(missing_skills)
-            }
+            # Use semantic skills matching from base class
+            skills_match_result = self._semantic_skills_match(resume_skills, job_skills)
+            analysis['skills_analysis'] = skills_match_result
         
-        # Experience analysis
+        # Enhanced experience analysis with relevance weighting
         resume_experience = resume_data.get('experience', [])
         if resume_experience:
-            total_years = self._calculate_experience_years(resume_experience)
+            job_title = job_data.get('title', '')
+            job_description = job_data.get('description', '')
             required_level = job_data.get('experience_level', 'not specified')
             
+            # Calculate experience relevance
+            relevance_result = self._calculate_experience_relevance(resume_experience, job_title, job_description)
+            
+            # Traditional experience calculation for fallback
+            total_years = self._calculate_experience_years(resume_experience)
+            
             analysis['experience_analysis'] = {
-                'total_years_experience': total_years,
+                'total_years': total_years,
+                'relevant_years': relevance_result['relevant_years'],
+                'relevance_score': relevance_result['relevance_score'],
+                'relevance_ratio': relevance_result['relevance_ratio'],
                 'number_of_positions': len(resume_experience),
                 'required_experience_level': required_level,
                 'experience_level_match': self._evaluate_experience_level(total_years, required_level)
             }
         
-        # Education analysis
+        # Education analysis (unchanged)
         resume_education = resume_data.get('education', [])
         if resume_education:
             highest_degree = self._get_highest_degree(resume_education)
@@ -75,70 +77,6 @@ class ScoringEngine(BaseScoringEngine):
         
         return analysis
 
-    def _calculate_experience_years(self, experience: List[Dict]) -> float:
-        total_years = 0
-        current_year = datetime.now().year
-        
-        for exp in experience:
-            date_str = exp.get('date', '')
-            years = self._extract_years_from_date(date_str, current_year)
-            total_years += years
-            
-        return total_years
-
-    def _extract_years_from_date(self, date_str: str, current_year: int) -> float:
-        if not date_str:
-            return 0
-            
-        # Handle various date formats
-        date_patterns = [
-            r'(\d{4})\s*[-–]\s*(\d{4})',  # 2020-2023
-            r'(\d{4})\s*[-–]\s*(?:present|current)',  # 2020-present
-            r'(\d{1,2})/(\d{4})\s*[-–]\s*(\d{1,2})/(\d{4})',  # 01/2020-12/2023
-            r'(\d{4})',  # Just year
-        ]
-        
-        for pattern in date_patterns:
-            match = re.search(pattern, date_str.lower())
-            if match:
-                if 'present' in date_str.lower() or 'current' in date_str.lower():
-                    start_year = int(match.group(1))
-                    return current_year - start_year
-                elif len(match.groups()) >= 2:
-                    start_year = int(match.group(1))
-                    end_year = int(match.group(2)) if match.group(2).isdigit() else current_year
-                    return end_year - start_year
-                else:
-                    return 1  # Default to 1 year if only one year found
-        
-        return 0
-
-    def _evaluate_experience_level(self, years: float, required_level: str) -> Dict[str, Any]:
-        level_requirements = {
-            'entry': (0, 2),
-            'mid': (3, 6),
-            'senior': (7, float('inf'))
-        }
-        
-        if required_level.lower() in level_requirements:
-            min_years, max_years = level_requirements[required_level.lower()]
-            meets_requirement = min_years <= years <= max_years
-            
-            return {
-                'meets_requirement': meets_requirement,
-                'required_range': f"{min_years}-{max_years if max_years != float('inf') else '+'} years",
-                'actual_years': years,
-                'level_match_score': 100 if meets_requirement else max(0, 100 - abs(years - min_years) * 10)
-            }
-        
-        return {
-            'meets_requirement': True,  # If level not specified, assume it's okay
-            'required_range': 'Not specified',
-            'actual_years': years,
-            'level_match_score': 70  # Neutral score
-        }
-
-            
     def _create_enhanced_prompt(self, resume_data: Dict[str, Any], job_data: Dict[str, Any], structured_analysis: Dict[str, Any]) -> str:
         return self._create_base_prompt(resume_data, job_data, structured_analysis, "OpenAI")
 
