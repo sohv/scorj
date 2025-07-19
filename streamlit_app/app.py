@@ -86,17 +86,17 @@ st.subheader("Score your resume against job descriptions")
 
 # Test backend connection
 if not test_backend_connection():
-    st.error("⚠️ Cannot connect to backend server. Please make sure it's running on " + API_URL)
+    st.error("Cannot connect to backend server. Please make sure it's running on " + API_URL)
     st.info("To start the backend server, run: `uvicorn main:app --reload`")
 else:
-    st.success("✅ Connected to backend server")
+    st.success("Connected to backend server")
 
 # Resume upload
 st.write("### Upload Resume")
 resume_file = st.file_uploader("Upload your resume (PDF or DOCX)", type=["pdf", "docx"])
 
 if resume_file:
-    st.success(f"✅ Resume uploaded: {resume_file.name}")
+    st.success(f"Resume uploaded: {resume_file.name}")
 
 # Single job scoring
 st.write("### Score Against Single Job")
@@ -115,33 +115,139 @@ if st.button("Score Resume", disabled=not (resume_file and (job_url or job_descr
         result = score_resume(resume_file, job_url=job_url, job_description=job_description)
         if result:
             st.write("---")
-            st.subheader("📊 Results")
+            st.subheader("Dual AI Analysis Results")
             
-            # Display score with color coding
-            score = result.get('score', 0)
-            if score >= 80:
-                st.success(f"🎉 Excellent Match: {score:.1f}/100")
-            elif score >= 60:
-                st.warning(f"👍 Good Match: {score:.1f}/100")
+            # Extract scores from dual model analysis
+            feedback = result.get('feedback', {})
+            final_score = feedback.get('final_score', result.get('score', 0))
+            ai_comparison = feedback.get('ai_comparison', {})
+            dual_model_results = feedback.get('dual_model_results', {})
+            
+            # Display final combined score with color coding
+            if final_score >= 80:
+                st.success(f"Excellent Match: {final_score}/100")
+            elif final_score >= 60:
+                st.warning(f"Good Match: {final_score}/100")
             else:
-                st.error(f"💡 Needs Improvement: {score:.1f}/100")
+                st.error(f"Needs Improvement: {final_score}/100")
+            
+            # Display AI model comparison
+            if ai_comparison:
+                st.write("### AI Model Comparison")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    openai_score = ai_comparison.get('openai_score', 0)
+                    st.metric("OpenAI Score", f"{openai_score}/100", 
+                             delta=f"{openai_score - final_score:+}" if openai_score > 0 else None)
+                
+                with col2:
+                    gemini_score = ai_comparison.get('gemini_score', 0)
+                    st.metric("Gemini Score", f"{gemini_score}/100",
+                             delta=f"{gemini_score - final_score:+}" if gemini_score > 0 else None)
+                
+                with col3:
+                    consensus_level = ai_comparison.get('consensus_level', 'Unknown')
+                    score_variance = ai_comparison.get('score_variance')
+                    if score_variance is not None:
+                        st.metric("Model Agreement", consensus_level, 
+                                 delta=f"±{score_variance} pts" if score_variance > 0 else "Perfect match")
+                    else:
+                        st.metric("Model Agreement", consensus_level)
             
             # Display job info
+            st.write("### Job Information")
             col1, col2 = st.columns(2)
             with col1:
                 st.metric("Job Title", result.get('job_title', 'N/A'))
             with col2:
                 st.metric("Company", result.get('company', 'N/A'))
             
-            # Display feedback
-            st.write("### 💬 Detailed Feedback")
-            feedback = result.get('feedback', {})
-            if isinstance(feedback, dict):
-                for key, value in feedback.items():
-                    st.write(f"**{key.replace('_', ' ').title()}:** {value}")
-            else:
-                st.write(feedback)
+            # Display transparency info
+            transparency = feedback.get('transparency', {})
+            if transparency:
+                st.write("### � Analysis Transparency")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    methodology = transparency.get('methodology', 'Unknown')
+                    st.info(f"**Methodology:** {methodology}")
+                    
+                    processing_time = transparency.get('processing_time_seconds', 0)
+                    st.info(f"**Processing Time:** {processing_time:.2f} seconds")
+                
+                with col2:
+                    validation = transparency.get('validation', {})
+                    both_models = validation.get('both_models_available', False)
+                    st.info(f"**Both AI Models Available:** {'Yes' if both_models else 'No'}")
+                    
+                    fallback_used = validation.get('fallback_used', False)
+                    st.info(f"**Fallback Used:** {'Yes' if fallback_used else 'No'}")
+            
+            # Display detailed feedback
+            st.write("### Detailed Analysis")
+            
+            # Score breakdown
+            score_breakdown = feedback.get('score_breakdown', {})
+            if score_breakdown:
+                st.write("**Score Breakdown:**")
+                breakdown_cols = st.columns(4)
+                breakdown_items = [
+                    ("Skills", score_breakdown.get('skills_score', 0)),
+                    ("Experience", score_breakdown.get('experience_score', 0)),
+                    ("Education", score_breakdown.get('education_score', 0)),
+                    ("Domain", score_breakdown.get('domain_score', 0))
+                ]
+                
+                for i, (category, score) in enumerate(breakdown_items):
+                    with breakdown_cols[i]:
+                        st.metric(category, f"{score}/100")
+            
+            # Key insights
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                strengths = feedback.get('strengths', [])
+                if strengths:
+                    st.write("**Key Strengths:**")
+                    for strength in strengths[:5]:  # Show top 5
+                        st.write(f"• {strength}")
+                
+                matching_skills = feedback.get('matching_skills', [])
+                if matching_skills:
+                    st.write("**Matching Skills:**")
+                    for skill in matching_skills[:8]:  # Show top 8
+                        st.write(f"• {skill}")
+            
+            with col2:
+                concerns = feedback.get('concerns', [])
+                if concerns:
+                    st.write("**Areas of Concern:**")
+                    for concern in concerns[:5]:  # Show top 5
+                        st.write(f"• {concern}")
+                
+                missing_skills = feedback.get('missing_skills', [])
+                if missing_skills:
+                    st.write("**Missing Skills:**")
+                    for skill in missing_skills[:8]:  # Show top 8
+                        st.write(f"• {skill}")
+            
+            # Summary and recommendations
+            summary = feedback.get('summary', '')
+            if summary:
+                st.write("**Executive Summary:**")
+                st.write(summary)
+            
+            recommendations = feedback.get('recommendations', [])
+            if recommendations:
+                st.write("**Improvement Recommendations:**")
+                for i, rec in enumerate(recommendations[:5], 1):  # Show top 5
+                    st.write(f"{i}. {rec}")
+            
+            # Show raw data in expander for debugging
+            with st.expander("Raw Analysis Data (for debugging)"):
+                st.json(feedback)
 
 # Footer
 st.write("---")
-st.caption("💡 Tip: Make sure your LinkedIn job URLs are publicly accessible and in the format: https://www.linkedin.com/jobs/view/[job_id]")
+st.caption("Tip: Make sure your LinkedIn job URLs are publicly accessible and in the format: https://www.linkedin.com/jobs/view/[job_id]")
