@@ -14,7 +14,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 class GeminiScoringEngine:
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-1.5-pro')
+        self.model = genai.GenerativeModel('gemini-2.0-flash')
         
         self.weights = {
             'skills_match': 0.35,
