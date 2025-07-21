@@ -36,13 +36,10 @@ class JobDescriptionParser:
                 # Try to extract from structured data
                 structured_data = soup.find('script', type='application/ld+json')
                 if structured_data:
-                    try:
-                        import json
-                        data = json.loads(structured_data.string)
-                        if isinstance(data, dict) and 'description' in data:
-                            description = data['description']
-                    except:
-                        pass
+                    import json
+                    data = json.loads(structured_data.string)
+                    if isinstance(data, dict) and 'description' in data:
+                        description = data['description']
             
             job_data = {
                 'title': title,
@@ -171,13 +168,9 @@ class JobDescriptionParser:
         # Try to find description in structured data
         structured_data = soup.find('script', type='application/ld+json')
         if structured_data:
-            try:
-                import json
-                data = json.loads(structured_data.string)
-                if isinstance(data, dict) and 'description' in data:
-                    return data['description']
-            except:
-                pass
+            data = json.loads(structured_data.string)
+            if isinstance(data, dict) and 'description' in data:
+                return data['description']
         
         # Fallback: look for description in meta tags
         meta_desc = soup.find('meta', property='og:description')

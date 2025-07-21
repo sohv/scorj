@@ -8,11 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# API configuration
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 def score_resume(resume_file, job_url: str = None, job_description: str = None):
-    """Score resume against a job description from a URL or text."""
     try:
         # Prepare files and data for the request
         files = {"resume": (resume_file.name, resume_file.getvalue(), resume_file.type)}
@@ -31,40 +29,8 @@ def score_resume(resume_file, job_url: str = None, job_description: str = None):
         if response.status_code == 200:
             return response.json()
         else:
-            try:
-                error_detail = response.json().get('detail', 'Unknown error')
-            except:
-                error_detail = response.text or 'Unknown error'
+            error_detail = response.json().get('detail', 'Unknown error') if response.text else 'Unknown error'
             st.error(f"Error scoring resume: {error_detail}")
-            return None
-    except requests.exceptions.ConnectionError:
-        st.error("Could not connect to the server. Please make sure the backend server is running.")
-        return None
-    except Exception as e:
-        st.error(f"An unexpected error occurred: {str(e)}")
-        return None
-
-def compare_multiple_jobs(resume_file, job_urls_text: str):
-    """Compare resume against multiple job descriptions."""
-    try:
-        # Prepare files and data for the request
-        files = {"resume": (resume_file.name, resume_file.getvalue(), resume_file.type)}
-        data = {"job_urls": job_urls_text.strip()}
-        
-        response = requests.post(
-            f"{API_URL}/resume/compare",
-            files=files,
-            data=data
-        )
-        
-        if response.status_code == 200:
-            return response.json()
-        else:
-            try:
-                error_detail = response.json().get('detail', 'Unknown error')
-            except:
-                error_detail = response.text or 'Unknown error'
-            st.error(f"Error comparing jobs: {error_detail}")
             return None
     except requests.exceptions.ConnectionError:
         st.error("Could not connect to the server. Please make sure the backend server is running.")
@@ -77,8 +43,14 @@ def test_backend_connection():
     """Test if backend is accessible."""
     try:
         response = requests.get(f"{API_URL}/")
-        return response.status_code == 200
-    except:
+        is_connected = response.status_code == 200
+        if is_connected:
+            print(f"Connected to backend server at {API_URL}")
+        else:
+            print(f"Backend server returned status {response.status_code}")
+        return is_connected
+    except Exception as e:
+        print(f"Cannot connect to backend server at {API_URL}: {e}")
         return False
 
 def chat_with_ai(question: str, model: str = "openai", context: str = None):
@@ -99,10 +71,7 @@ def chat_with_ai(question: str, model: str = "openai", context: str = None):
         if response.status_code == 200:
             return response.json()
         else:
-            try:
-                error_detail = response.json().get('detail', 'Unknown error')
-            except:
-                error_detail = response.text or 'Unknown error'
+            error_detail = response.json().get('detail', 'Unknown error') if response.text else 'Unknown error'
             st.error(f"Error in AI chat: {error_detail}")
             return None
     except requests.exceptions.ConnectionError:
@@ -114,14 +83,10 @@ def chat_with_ai(question: str, model: str = "openai", context: str = None):
 
 # Streamlit UI
 st.title("ResumeRoast")
-st.subheader("Score your resume against job descriptions")
+st.write("**Score your resume against job descriptions**")
 
-# Test backend connection
-if not test_backend_connection():
-    st.error("Cannot connect to backend server. Please make sure it's running on " + API_URL)
-    st.info("To start the backend server, run: `uvicorn main:app --reload`")
-else:
-    st.success("Connected to backend server")
+# Test backend connection (silently)
+backend_connected = test_backend_connection()
 
 # Resume upload
 st.write("### Upload Resume")
@@ -208,7 +173,7 @@ if st.session_state.scoring_result:
     # Display transparency info
     transparency = feedback.get('transparency', {})
     if transparency:
-        st.write("### 📊 Analysis Transparency")
+        st.write("### Analysis Transparency")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -292,82 +257,79 @@ if st.session_state.scoring_result:
 
     # AI Chat Interface
     st.write("---")
-    st.write("### 🤖 Ask AI About This Scoring")
+    st.write("### Ask AI About This Scoring")
     st.write("Chat with the AI models to understand the scoring decisions, get career advice, or ask follow-up questions.")
     
-    # Initialize chat history if not exists
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-    
-    # AI model selection for chat
-    chat_model = st.selectbox(
-        "Choose AI model for chat:",
-        ["openai", "gemini"],
-        format_func=lambda x: "OpenAI GPT-4o-mini" if x == "openai" else "Google Gemini 2.0-flash"
-    )
-    
-    # Create scoring context for AI
-    scoring_context = f"""
-    Recent resume scoring results:
-    - Overall Score: {final_score}/100
-    - Job Title: {result.get('job_title', 'N/A')}
-    - Company: {result.get('company', 'N/A')}
-    - Model Used: {result.get('model_used', 'N/A')}
-    - Key Strengths: {', '.join(feedback.get('strengths', [])[:3])}
-    - Main Concerns: {', '.join(feedback.get('concerns', [])[:3])}
-    - Missing Skills: {', '.join(feedback.get('missing_skills', [])[:3])}
-    """
-    
-    # Chat input
-    user_question = st.text_input(
-        "Ask your question:",
-        placeholder="Why did I get this score? How can I improve? What skills should I focus on?",
-        key="ai_chat_input"
-    )
-    
-    col1, col2 = st.columns([1, 4])
-    with col1:
-        ask_button = st.button("Ask AI", disabled=not user_question.strip())
-    with col2:
-        if st.button("Clear Chat History"):
+    # Create a container with border for the entire chat interface
+    with st.container(border=True):
+        # Initialize chat history if not exists
+        if "chat_history" not in st.session_state:
+            st.session_state.chat_history = []
+        
+        # AI model selection for chat
+        chat_model = st.selectbox(
+            "Choose AI model for chat:",
+            ["openai", "gemini"],
+            format_func=lambda x: "OpenAI GPT-4o-mini" if x == "openai" else "Google Gemini 2.0-flash"
+        )
+        
+        # Create scoring context for AI
+        scoring_context = f"""
+        Recent resume scoring results:
+        - Overall Score: {final_score}/100
+        - Job Title: {result.get('job_title', 'N/A')}
+        - Company: {result.get('company', 'N/A')}
+        - Model Used: {result.get('model_used', 'N/A')}
+        - Key Strengths: {', '.join(feedback.get('strengths', [])[:3])}
+        - Main Concerns: {', '.join(feedback.get('concerns', [])[:3])}
+        - Missing Skills: {', '.join(feedback.get('missing_skills', [])[:3])}
+        """
+        
+        # Display chat history first (above input)
+        if st.session_state.chat_history:
+            st.write("**Chat History:**")
+            
+            # Create a scrollable container for chat history
+            chat_container = st.container(height=300)
+            with chat_container:
+                # Show most recent chats first
+                for i, chat in enumerate(reversed(st.session_state.chat_history[-5:])):  # Show last 5 chats
+                    # User message
+                    with st.chat_message("user"):
+                        st.write(f"*{chat['timestamp']}*")
+                        st.write(chat['question'])
+                    
+                    # AI response
+                    model_name = "OpenAI" if chat['model'] == "openai" else "Gemini"
+                    with st.chat_message("assistant"):
+                        st.write(f"*{model_name}*")
+                        st.write(chat['answer'])
+        
+        # Chat input at the bottom
+        user_question = st.chat_input("Ask your question: Why did I get this score? How can I improve?")
+        
+        # Clear chat history button
+        if st.button("Clear Chat History", type="secondary"):
             st.session_state.chat_history = []
             st.rerun()
-    
-    # Process AI chat
-    if ask_button and user_question.strip():
-        with st.spinner(f"Getting response from {chat_model.upper()}..."):
-            chat_response = chat_with_ai(user_question, chat_model, scoring_context)
-            
-            if chat_response and chat_response.get('success'):
-                # Add to chat history
-                st.session_state.chat_history.append({
-                    "question": user_question,
-                    "answer": chat_response.get('response', ''),
-                    "model": chat_response.get('model_used', chat_model),
-                    "timestamp": datetime.now().strftime("%H:%M:%S")
-                })
-                
-                # Clear input by rerunning
-                st.rerun()
-    
-    # Display chat history
-    if st.session_state.chat_history:
-        st.write("#### Chat History")
         
-        # Show most recent chats first
-        for i, chat in enumerate(reversed(st.session_state.chat_history[-5:])):  # Show last 5 chats
-            with st.container():
-                st.write(f"**🙋 You ({chat['timestamp']}):**")
-                st.write(chat['question'])
+        # Process AI chat when user submits a question
+        if user_question and user_question.strip():
+            with st.spinner(f"Getting response from {chat_model.upper()}..."):
+                chat_response = chat_with_ai(user_question, chat_model, scoring_context)
                 
-                model_emoji = "🤖" if chat['model'] == "openai" else "💎"
-                model_name = "OpenAI" if chat['model'] == "openai" else "Gemini"
-                st.write(f"**{model_emoji} {model_name}:**")
-                st.write(chat['answer'])
-                
-                if i < len(st.session_state.chat_history[-5:]) - 1:  # Don't add separator after last item
-                    st.write("---")
+                if chat_response and chat_response.get('success'):
+                    # Add to chat history
+                    st.session_state.chat_history.append({
+                        "question": user_question,
+                        "answer": chat_response.get('response', ''),
+                        "model": chat_response.get('model_used', chat_model),
+                        "timestamp": datetime.now().strftime("%H:%M:%S")
+                    })
+                    
+                    # Rerun to update chat display
+                    st.rerun()
 
-# Footer
-st.write("---")
-st.caption("Tip: Make sure the LinkedIn job URLs are publicly accessible and in the format: https://www.linkedin.com/jobs/view/[job_id]")
+#footer
+# st.write("---") --- IGNORE ---
+st.caption("NOTE : make sure the LinkedIn job URLs in the format: https://www.linkedin.com/jobs/view/[job_id]")
