@@ -50,7 +50,6 @@ async def score_resume(
     job_description: Optional[str] = Form(None),
     model: Optional[str] = Form("dual")  # dual, openai, gemini
 ):
-    """Score a resume against a job description using specified model."""
     
     # Validate model choice
     valid_models = ["dual", "openai", "gemini"]
@@ -139,7 +138,6 @@ async def compare_multiple_jobs(
     job_urls: str = Form(...),
     model: Optional[str] = Form("dual")  # dual, openai, gemini
 ):
-    """Compare a resume against multiple job descriptions using specified model."""
     
     # Validate model choice
     valid_models = ["dual", "openai", "gemini"]
@@ -230,7 +228,6 @@ async def health_check():
 # Model information endpoint
 @app.get("/models")
 async def get_available_models():
-    """Get information about available scoring models."""
     return {
         "available_models": [
             {
@@ -262,7 +259,6 @@ async def chat_with_ai(
     model: Optional[str] = Form("openai"),  # openai or gemini
     context: Optional[str] = Form(None)  # Optional context about recent scoring
 ):
-    """Chat with AI models to get insights about scoring decisions."""
     
     # Validate model choice
     valid_models = ["openai", "gemini"]

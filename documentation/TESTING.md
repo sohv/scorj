@@ -35,10 +35,10 @@ python run_tests.py [command]
 | Command | Description | Status |
 |---------|-------------|---------|
 | `legacy` | Run legacy test scripts | ✅ **Recommended** |
-| `unit` | Run unit tests only (no API calls) | 🔧 Needs fixes |
-| `integration` | Run integration tests | 🔧 Requires API keys |
-| `all` | Run all pytest tests | 🔧 Needs fixes |
-| `coverage` | Run tests with coverage report | 🔧 Framework ready |
+| `unit` | Run unit tests only (no API calls) | Needs fixes |
+| `integration` | Run integration tests | Requires API keys |
+| `all` | Run all pytest tests | Needs fixes |
+| `coverage` | Run tests with coverage report | Framework ready |
 | `quick` | Quick validation test | ✅ Working |
 
 ### Examples
@@ -219,7 +219,7 @@ pip install pytest pytest-asyncio pytest-cov
 - **Integration tests**: Need both API keys
 - **Coverage reports**: Need `pytest-cov`
 
-### 🔧 Tests Needing Fixes
+### Tests Needing Fixes
 - Some pytest unit tests need minor API structure alignment
 - Mock tests need updated response formats
 

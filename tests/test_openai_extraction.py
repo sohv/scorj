@@ -1,13 +1,12 @@
-"""Simple test script to verify enhanced OpenAI-based scoring is working."""
-
 import os
 import json
+import traceback
+
 from utils.resume_parser import ResumeParser
 from utils.job_parser import JobDescriptionParser
 from utils.scoring_engine_openai import ScoringEngine
 
 def test_enhanced_scoring():
-    """Test the enhanced scoring engine with transparency and hybrid approach."""
     print("Testing Enhanced Scoring Engine...")
     
     # Sample data
@@ -119,12 +118,10 @@ def test_enhanced_scoring():
         
     except Exception as e:
         print(f"Enhanced scoring test failed: {e}")
-        import traceback
         traceback.print_exc()
         return False
 
 def main():
-    """Run enhanced scoring test."""
     print("Enhanced Scoring Engine Test")
     print("=" * 40)
     

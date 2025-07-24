@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-"""
-Quick test script to verify the improved scoring engine functionality
-"""
 
 import sys
 import os
+import traceback
+
 sys.path.append('.')
 
 from utils.base_scoring_engine import BaseScoringEngine
 
 def test_fixed_weights():
-    """Test that weights are fixed regardless of role"""
     engine = BaseScoringEngine()
     
     # Test that weights remain the same regardless of job title
@@ -26,7 +24,6 @@ def test_fixed_weights():
     print("✅ Fixed weight system working correctly")
 
 def test_semantic_skills_matching():
-    """Test semantic skills matching"""
     engine = BaseScoringEngine()
     
     resume_skills = ["Python programming", "Machine Learning", "Data Analysis", "JavaScript"]
@@ -44,7 +41,6 @@ def test_semantic_skills_matching():
     print("✅ Semantic skills matching working correctly")
 
 def test_experience_relevance():
-    """Test experience relevance calculation"""
     engine = BaseScoringEngine()
     
     experience = [
@@ -75,7 +71,6 @@ def test_experience_relevance():
     print("✅ Experience relevance calculation working correctly")
 
 def test_simplified_scoring():
-    """Test simplified 3-tier scoring system"""
     engine = BaseScoringEngine()
     
     # Test score interpretation
@@ -117,9 +112,8 @@ if __name__ == "__main__":
         test_simplified_scoring()
         print()
         
-        print("🎉 All tests passed! Improvements are working correctly.")
+        print("All tests passed! Improvements are working correctly.")
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
-        import traceback
+        print(f"Test failed: {e}")
         traceback.print_exc()

@@ -21,4 +21,6 @@ pytest-asyncio
 requests
 beautifulsoup4
 networkx
-openai 
+openai
+pathlib
+dataclasses 

@@ -1,7 +1,43 @@
 env/
 venv/
 .env
-utils/__pycache__
-backend/__pycache__
-tests/__pycache__
-streamlit_app/__pycache__
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Logs
+*.log
+logs/
+backend/logs/
+
+# Cache
+cache/
+backend/cache/
+*.cache
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

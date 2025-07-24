@@ -16,7 +16,6 @@ from utils.scoring_engine_openai import ScoringEngine as OpenAIScoringEngine
 
 
 class TestIntegrationWorkflow:
-    """Integration tests for the complete workflow."""
     
     @pytest.fixture
     def resume_parser(self):
@@ -94,7 +93,6 @@ class TestIntegrationWorkflow:
         """
     
     def test_complete_workflow_without_api(self, resume_parser, job_parser, sample_resume_text, sample_job_description):
-        """Test the complete workflow without making API calls."""
         # Parse resume
         resume_data = resume_parser._structure_text(sample_resume_text)
         assert resume_data is not None
@@ -123,7 +121,6 @@ class TestIntegrationWorkflow:
     @pytest.mark.skipif(not os.getenv('OPENAI_API_KEY'), reason="OpenAI API key not available")
     def test_complete_workflow_with_scoring(self, resume_parser, job_parser, scoring_engine, 
                                           sample_resume_text, sample_job_description):
-        """Test the complete workflow including AI scoring (requires API key)."""
         # Parse resume
         resume_data = resume_parser._structure_text(sample_resume_text)
         

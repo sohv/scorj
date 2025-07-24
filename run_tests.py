@@ -10,9 +10,8 @@ import subprocess
 from pathlib import Path
 
 def run_command(cmd, description):
-    """Run a command and display results."""
     print(f"\n{'='*60}")
-    print(f"🧪 {description}")
+    print(f"{description}")
     print(f"{'='*60}")
     print(f"Command: {' '.join(cmd)}")
     print()
@@ -40,8 +39,7 @@ def run_command(cmd, description):
         return False
 
 def main():
-    """Main test runner."""
-    print("🔬 ResumeRoast Test Runner")
+    print("ResumeRoast Test Runner")
     
     if len(sys.argv) < 2:
         print("""
@@ -83,34 +81,34 @@ Examples:
         success1 = run_command(['pytest', 'tests/', '-v'], 
                               "Running All Tests")
         if success1:
-            print("\n🎉 All tests completed successfully!")
+            print("\nAll tests completed successfully!")
         else:
-            print("\n⚠️  Some tests failed. Check output above.")
+            print("\nSome tests failed. Check output above.")
     
     elif command == 'coverage':
         run_command(['pytest', 'tests/', '--cov=utils', '--cov-report=html', '--cov-report=term', '-v'], 
                    "Running Tests with Coverage")
-        print("\n📊 Coverage report generated in htmlcov/index.html")
+        print("\nCoverage report generated in htmlcov/index.html")
     
     elif command == 'quick':
         run_command(['pytest', 'tests/test_resume_parser.py::TestResumeParser::test_parser_initialization', '-v'], 
                    "Quick Validation Test")
     
     elif command == 'legacy':
-        print("\n🔧 Running Legacy Test Scripts")
+        print("\nRunning Legacy Test Scripts")
         success1 = run_command([sys.executable, 'test_openai_extraction.py'], 
                               "OpenAI Extraction Test")
         if os.getenv('GOOGLE_API_KEY'):
             success2 = run_command([sys.executable, 'test_dual_model.py'], 
                                   "Dual Model Test")
         else:
-            print("⚠️  Skipping dual model test (GOOGLE_API_KEY not set)")
+            print("Skipping dual model test (GOOGLE_API_KEY not set)")
             success2 = True
         
         if success1 and success2:
-            print("\n🎉 Legacy tests completed successfully!")
+            print("\nLegacy tests completed successfully!")
         else:
-            print("\n⚠️  Some legacy tests failed.")
+            print("\nSome legacy tests failed.")
     
     else:
         print(f"❌ Unknown command: {command}")

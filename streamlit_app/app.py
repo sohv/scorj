@@ -40,7 +40,6 @@ def score_resume(resume_file, job_url: str = None, job_description: str = None):
         return None
 
 def test_backend_connection():
-    """Test if backend is accessible."""
     try:
         response = requests.get(f"{API_URL}/")
         is_connected = response.status_code == 200
@@ -54,7 +53,6 @@ def test_backend_connection():
         return False
 
 def chat_with_ai(question: str, model: str = "openai", context: str = None):
-    """Chat with AI models about scoring insights."""
     try:
         data = {
             "question": question,
