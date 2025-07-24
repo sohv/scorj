@@ -31,6 +31,8 @@ backend/logs/
 cache/
 backend/cache/
 *.cache
+__pycache__/
+.pytest_cache/ 
 
 # IDE
 .vscode/

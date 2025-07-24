@@ -270,16 +270,18 @@ class BaseScoringEngine:
         experience_analysis = structured_analysis.get('experience_analysis', {})
         education_analysis = structured_analysis.get('education_analysis', {})
         
-        # Check for user comments
+        # Check for user comments with enhanced contextual integration
         user_comments = resume_data.get('user_comments', '')
-        user_comments_section = f"""
+        user_comments_section = ""
+        
+        if user_comments:
+            # Extract company name from job data if available
+            company_name = job_data.get('company', 'the company')
+            user_comments_section = f"""
 
-**USER PROVIDED CONTEXT:**
-The candidate has provided additional context about their situation:
-"{user_comments}"
-
-Please consider this additional information when evaluating fit, especially for requirements like availability, location preferences, willingness to relocate, learning attitude, etc.
-""" if user_comments else ""
+**CANDIDATE CONTEXT:**
+Applying to {job_title} at {company_name}. Additional context: "{user_comments}"
+"""
         
         base_prompt = f"""
 You are a senior technical recruiter with 15+ years of experience. Analyze this resume against the job requirements and provide comprehensive scoring.
@@ -299,25 +301,23 @@ Use these exact weights for scoring:
 - Domain Expertise (20%)
 
 **CRITICAL SCORING GUIDELINES:**
-- Use the FULL 0-100 range - avoid clustering around 70-85
-- Score 90-100: Exceptional match, rare candidates who exceed most requirements
-- Score 75-89: Good match with minor gaps or slight overqualification  
-- Score 60-74: Moderate match requiring some development
-- Score 40-59: Weak match with significant gaps
+- Use FULL 0-100 range, avoid clustering around 70-85
+- Score 90-100: Exceptional match, exceeds requirements
+- Score 75-89: Good match with minor gaps
+- Score 60-74: Moderate match, some development needed
+- Score 40-59: Weak match, significant gaps
 - Score 0-39: Poor match, fundamentally misaligned
-- Be decisive: if skills match is <30%, score should be <50
-- Be decisive: if skills match is >80% with good experience, score should be >85
-- Differentiate clearly between candidates - avoid "safe middle" scores
+- Be decisive: <30% skills = <50 score, >80% skills + good experience = >85 score
+- Factor in candidate context when provided
 
 **REQUIRED JSON OUTPUT:**
-Provide your analysis as valid JSON with these exact keys:
-1. "overall_score": integer 0-100 (use full range, be decisive)
+1. "overall_score": integer 0-100 (factor in candidate context)
 2. "confidence_level": "High"/"Medium"/"Low"
 3. "score_breakdown": {{"skills_score": 0-100, "experience_score": 0-100, "education_score": 0-100, "domain_score": 0-100}}
-4. "match_category": score interpretation based on overall_score
+4. "match_category": score interpretation
 5. "summary": brief executive summary (2-3 sentences)
-6. "strengths": list of key strengths (3-5 items)
-7. "concerns": list of concerns (2-4 items)
+6. "strengths": key strengths (3-5 items)
+7. "concerns": main concerns (2-4 items)
 8. "missing_skills": list of missing required skills
 9. "matching_skills": list of matching skills found
 10. "experience_assessment": {{"relevant_years": number, "role_progression": assessment, "industry_fit": assessment}}
