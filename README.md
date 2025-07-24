@@ -59,17 +59,3 @@ streamlit run app.py
 cd gradio_app # gradio
 python app.py
 ```
-
-## Architecture
-
-The project uses a hybrid approach combining:
-- Semantic Embedding with Cosine Similarity for primary matching
-- Structured Rule-Based Matching for field-specific scoring
-- Knowledge Graph for relationship mapping
-- Gemini Pro for advanced analysis and suggestions
-
-Create a `.env` file in the root directory:
-```
-API_URL=http://localhost:8000
-OPENAI_API_KEY=your-openai-api-key-here
-```
