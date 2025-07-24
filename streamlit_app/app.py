@@ -96,7 +96,7 @@ if resume_file:
     st.success(f"Resume uploaded: {resume_file.name}")
 
 # Single job scoring
-st.write("### Score Against Single Job")
+st.write("### Score the job")
 job_input_method = st.radio("Choose input method:", ("LinkedIn URL", "Paste Job Description"))
 
 job_url = None
