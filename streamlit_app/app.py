@@ -10,7 +10,7 @@ load_dotenv()
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
-def score_resume(resume_file, job_url: str = None, job_description: str = None):
+def score_resume(resume_file, job_url: str = None, job_description: str = None, user_comments: str = None):
     try:
         # Prepare files and data for the request
         files = {"resume": (resume_file.name, resume_file.getvalue(), resume_file.type)}
@@ -19,6 +19,8 @@ def score_resume(resume_file, job_url: str = None, job_description: str = None):
             data["job_url"] = job_url.strip()
         if job_description:
             data["job_description"] = job_description.strip()
+        if user_comments:
+            data["user_comments"] = user_comments.strip()
         
         response = requests.post(
             f"{API_URL}/resume/score",
@@ -105,13 +107,23 @@ if job_input_method == "LinkedIn URL":
 else:
     job_description = st.text_area("Paste the job description here:", height=200, placeholder="Paste the full job description...")
 
+# User comments section
+st.write("### Additional Context")
+st.write("**Provide additional information about your situation to get a more accurate score:**")
+user_comments = st.text_area(
+    "Add comments about your availability, preferences, or any other relevant context:",
+    height=100,
+    placeholder="Example: I am available to work on-site in Bengaluru, willing to relocate, have 6 months availability for internship, passionate about learning AI/ML, etc.",
+    help="This information will be considered when evaluating your fit for the role, especially for requirements not directly mentioned in your resume."
+)
+
 # Initialize session state for scoring results
 if "scoring_result" not in st.session_state:
     st.session_state.scoring_result = None
 
 if st.button("Score Resume", disabled=not (resume_file and (job_url or job_description))):
     with st.spinner("Analyzing resume..."):
-        result = score_resume(resume_file, job_url=job_url, job_description=job_description)
+        result = score_resume(resume_file, job_url=job_url, job_description=job_description, user_comments=user_comments)
         if result:
             # Store result in session state to persist across reruns
             st.session_state.scoring_result = result
@@ -122,8 +134,13 @@ if st.session_state.scoring_result:
     st.write("---")
     st.subheader("Dual AI Analysis Results")
     
-    # Extract scores from dual model analysis
+    # Show if user comments were included
     feedback = result.get('feedback', {})
+    structured_analysis = feedback.get('structured_analysis', {})
+    if user_comments and user_comments.strip():
+        st.info("💬 **User comments were included in the analysis:** " + user_comments.strip()[:100] + ("..." if len(user_comments.strip()) > 100 else ""))
+    
+    # Extract scores from dual model analysis
     final_score = feedback.get('final_score', result.get('score', 0))
     ai_comparison = feedback.get('ai_comparison', {})
     dual_model_results = feedback.get('dual_model_results', {})

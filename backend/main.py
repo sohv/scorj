@@ -1,7 +1,3 @@
-"""
---- built by sv :)
-"""
-
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
@@ -48,6 +44,7 @@ async def score_resume(
     resume: UploadFile = File(...),
     job_url: Optional[str] = Form(None),
     job_description: Optional[str] = Form(None),
+    user_comments: Optional[str] = Form(None),  # NEW: User comments for context
     model: Optional[str] = Form("dual")  # dual, openai, gemini
 ):
     
@@ -79,50 +76,37 @@ async def score_resume(
     if not (resume.filename.endswith('.pdf') or resume.filename.endswith('.docx')):
         raise HTTPException(status_code=400, detail="Unsupported file format. Please upload PDF or DOCX files only.")
     
-    try:
-        # Read file content
-        file_content = await resume.read()
-        file_stream = io.BytesIO(file_content)
-        
-        # Parse resume based on file type
-        if resume.filename.endswith('.pdf'):
-            resume_data = resume_parser.parse_pdf(file_stream)
-        elif resume.filename.endswith('.docx'):
-            resume_data = resume_parser.parse_docx(file_stream)
-        
-        # Validate resume parsing
-        if not resume_data:
-            raise HTTPException(status_code=400, detail="Could not parse resume content")
-            
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error parsing resume: {str(e)}")
+    file_content = await resume.read()
+    file_stream = io.BytesIO(file_content)
+    
+    if resume.filename.endswith('.pdf'):
+        resume_data = resume_parser.parse_pdf(file_stream)
+    elif resume.filename.endswith('.docx'):
+        resume_data = resume_parser.parse_docx(file_stream)
+    
+    if not resume_data:
+        raise HTTPException(status_code=400, detail="Could not parse resume content")
+    
+    if user_comments and user_comments.strip():
+        resume_data['user_comments'] = user_comments.strip()
+        resume_data['full_text'] = resume_data.get('full_text', '') + f"\n\nAdditional Context from User:\n{user_comments.strip()}"
     
     # Parse job description
-    try:
-        if job_url:
-            job_data = job_parser.parse_linkedin_job(job_url.strip())
-            
-            # Validate job parsing
-            if not job_data:
-                raise HTTPException(status_code=400, detail="Could not parse job description from URL")
-        else:
-            # Handle pasted job description
-            job_data = job_parser.parse_job_description_text(job_description.strip())
-            
-            # Validate job parsing
-            if not job_data:
-                raise HTTPException(status_code=400, detail="Could not parse job description text")
-            
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error parsing job description: {str(e)}")
+    if job_url:
+        job_data = job_parser.parse_linkedin_job(job_url.strip())
+        
+        if not job_data:
+            raise HTTPException(status_code=400, detail="Could not parse job description from URL")
+    else:
+        job_data = job_parser.parse_job_description_text(job_description.strip())
+        
+        if not job_data:
+            raise HTTPException(status_code=400, detail="Could not parse job description text")
     
     # Calculate score
-    try:
-        result = selected_engine.calculate_score(resume_data, job_data)
-        score = result.get('final_score', result.get('overall_score', 0))
-        feedback = result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error calculating score: {str(e)}")
+    result = selected_engine.calculate_score(resume_data, job_data)
+    score = result.get('final_score', result.get('overall_score', 0))
+    feedback = result
     
     return {
         "score": score,
@@ -136,6 +120,7 @@ async def score_resume(
 async def compare_multiple_jobs(
     resume: UploadFile = File(...),
     job_urls: str = Form(...),
+    user_comments: Optional[str] = Form(None),  # NEW: User comments for context
     model: Optional[str] = Form("dual")  # dual, openai, gemini
 ):
     
@@ -170,53 +155,44 @@ async def compare_multiple_jobs(
     if not (resume.filename.endswith('.pdf') or resume.filename.endswith('.docx')):
         raise HTTPException(status_code=400, detail="Unsupported file format. Please upload PDF or DOCX files only.")
     
-    try:
-        # Read file content
-        file_content = await resume.read()
-        file_stream = io.BytesIO(file_content)
-        
-        # Parse resume based on file type
-        if resume.filename.endswith('.pdf'):
-            resume_data = resume_parser.parse_pdf(file_stream)
-        elif resume.filename.endswith('.docx'):
-            resume_data = resume_parser.parse_docx(file_stream)
-        
-        # Validate resume parsing
-        if not resume_data:
-            raise HTTPException(status_code=400, detail="Could not parse resume content")
-            
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error parsing resume: {str(e)}")
+    file_content = await resume.read()
+    file_stream = io.BytesIO(file_content)
+    
+    if resume.filename.endswith('.pdf'):
+        resume_data = resume_parser.parse_pdf(file_stream)
+    elif resume.filename.endswith('.docx'):
+        resume_data = resume_parser.parse_docx(file_stream)
+    
+    if not resume_data:
+        raise HTTPException(status_code=400, detail="Could not parse resume content")
+    
+    if user_comments and user_comments.strip():
+        resume_data['user_comments'] = user_comments.strip()
+        resume_data['full_text'] = resume_data.get('full_text', '') + f"\n\nAdditional Context from User:\n{user_comments.strip()}"
     
     # Parse and score each job
     results = []
     for job_url in urls_list:
-        try:
-            job_data = job_parser.parse_linkedin_job(job_url)
+        job_data = job_parser.parse_linkedin_job(job_url)
+        
+        if not job_data:
+            results.append({
+                "job_url": job_url,
+                "error": "Could not parse job description from URL"
+            })
+            continue
             
-            if not job_data:
-                results.append({
-                    "job_url": job_url,
-                    "error": "Could not parse job description from URL"
-                })
-                continue
-                
-            result = selected_engine.calculate_score(resume_data, job_data)
-            score = result.get('final_score', result.get('overall_score', 0))
-            feedback = result
-            results.append({
-                "job_url": job_url,
-                "job_title": job_data.get("title", "Unknown"),
-                "company": job_data.get("company", "Unknown"),
-                "score": score,
-                "feedback": feedback,
-                "model_used": model
-            })
-        except Exception as e:
-            results.append({
-                "job_url": job_url,
-                "error": str(e)
-            })
+        result = selected_engine.calculate_score(resume_data, job_data)
+        score = result.get('final_score', result.get('overall_score', 0))
+        feedback = result
+        results.append({
+            "job_url": job_url,
+            "job_title": job_data.get("title", "Unknown"),
+            "company": job_data.get("company", "Unknown"),
+            "score": score,
+            "feedback": feedback,
+            "model_used": model
+        })
     
     return results
 
@@ -265,59 +241,51 @@ async def chat_with_ai(
     if model not in valid_models:
         raise HTTPException(status_code=400, detail=f"Invalid model choice. Must be one of: {valid_models}")
     
-    try:
-        if model == "openai":
-            # Use OpenAI for chat
-            import openai
-            
-            # Prepare messages
-            messages = [
-                {
-                    "role": "system", 
-                    "content": "You are a senior technical recruiter AI assistant. Help users understand resume scoring decisions, provide career advice, and explain recruitment insights. Be concise, helpful, and professional."
-                },
-                {
-                    "role": "user",
-                    "content": f"Context: {context}\n\nQuestion: {question}" if context else question
-                }
-            ]
-            
-            client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages,
-                max_tokens=500,
-                temperature=0.7
-            )
-            
-            return {
-                "response": response.choices[0].message.content,
-                "model_used": "openai",
-                "success": True
+    if model == "openai":
+        import openai
+        
+        messages = [
+            {
+                "role": "system", 
+                "content": "You are a senior technical recruiter AI assistant. Help users understand resume scoring decisions, provide career advice, and explain recruitment insights. Be concise, helpful, and professional."
+            },
+            {
+                "role": "user",
+                "content": f"Context: {context}\n\nQuestion: {question}" if context else question
             }
-            
-        elif model == "gemini":
-            # Use Gemini for chat
-            import google.generativeai as genai
-            
-            genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-            gemini_model = genai.GenerativeModel('gemini-2.0-flash')
-            
-            # Prepare prompt
-            system_prompt = "You are a senior technical recruiter AI assistant. Help users understand resume scoring decisions, provide career advice, and explain recruitment insights. Be concise, helpful, and professional."
-            
-            full_prompt = f"{system_prompt}\n\nContext: {context}\n\nQuestion: {question}" if context else f"{system_prompt}\n\nQuestion: {question}"
-            
-            response = gemini_model.generate_content(full_prompt)
-            
-            return {
-                "response": response.text,
-                "model_used": "gemini", 
-                "success": True
-            }
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error in AI chat: {str(e)}")
+        ]
+        
+        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            max_tokens=500,
+            temperature=0.7
+        )
+        
+        return {
+            "response": response.choices[0].message.content,
+            "model_used": "openai",
+            "success": True
+        }
+        
+    elif model == "gemini":
+        import google.generativeai as genai
+        
+        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+        gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        system_prompt = "You are a senior technical recruiter AI assistant. Help users understand resume scoring decisions, provide career advice, and explain recruitment insights. Be concise, helpful, and professional."
+        
+        full_prompt = f"{system_prompt}\n\nContext: {context}\n\nQuestion: {question}" if context else f"{system_prompt}\n\nQuestion: {question}"
+        
+        response = gemini_model.generate_content(full_prompt)
+        
+        return {
+            "response": response.text,
+            "model_used": "gemini", 
+            "success": True
+        }
 
 # Alternative endpoint for debugging
 @app.get("/test")

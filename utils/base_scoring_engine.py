@@ -270,6 +270,17 @@ class BaseScoringEngine:
         experience_analysis = structured_analysis.get('experience_analysis', {})
         education_analysis = structured_analysis.get('education_analysis', {})
         
+        # Check for user comments
+        user_comments = resume_data.get('user_comments', '')
+        user_comments_section = f"""
+
+**USER PROVIDED CONTEXT:**
+The candidate has provided additional context about their situation:
+"{user_comments}"
+
+Please consider this additional information when evaluating fit, especially for requirements like availability, location preferences, willingness to relocate, learning attitude, etc.
+""" if user_comments else ""
+        
         base_prompt = f"""
 You are a senior technical recruiter with 15+ years of experience. Analyze this resume against the job requirements and provide comprehensive scoring.
 
@@ -278,7 +289,7 @@ Position: {job_title}
 Experience Level: {experience_level}
 Pre-calculated Skills Match: {skills_analysis.get('match_percentage', 0):.1f}%
 Experience: {experience_analysis.get('total_years', 0)} years
-Education: {education_analysis.get('highest_degree', 'Not specified')}
+Education: {education_analysis.get('highest_degree', 'Not specified')}{user_comments_section}
 
 **SCORING METHODOLOGY:**
 Use these exact weights for scoring:
