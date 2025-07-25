@@ -36,8 +36,7 @@ scoring_engine = OpenAIScoringEngine()
 async def score_resume(
     resume: UploadFile = File(...),
     job_url: Optional[str] = Form(None),
-    job_description: Optional[str] = Form(None),
-    user_comments: Optional[str] = Form(None)  # User comments for context
+    job_description: Optional[str] = Form(None)
 ):
     
     # Validate that either job_url or job_description is provided
@@ -65,10 +64,6 @@ async def score_resume(
     
     if not resume_data:
         raise HTTPException(status_code=400, detail="Could not parse resume content")
-    
-    if user_comments and user_comments.strip():
-        resume_data['user_comments'] = user_comments.strip()
-        resume_data['full_text'] = resume_data.get('full_text', '') + f"\n\nAdditional Context from User:\n{user_comments.strip()}"
     
     # Parse job description
     if job_url:
@@ -98,8 +93,7 @@ async def score_resume(
 @app.post("/resume/compare")
 async def compare_multiple_jobs(
     resume: UploadFile = File(...),
-    job_urls: str = Form(...),
-    user_comments: Optional[str] = Form(None)  # User comments for context
+    job_urls: str = Form(...)
 ):
     
     # Parse job URLs from form data (assuming they're newline-separated)
@@ -130,10 +124,6 @@ async def compare_multiple_jobs(
     
     if not resume_data:
         raise HTTPException(status_code=400, detail="Could not parse resume content")
-    
-    if user_comments and user_comments.strip():
-        resume_data['user_comments'] = user_comments.strip()
-        resume_data['full_text'] = resume_data.get('full_text', '') + f"\n\nAdditional Context from User:\n{user_comments.strip()}"
     
     # Parse and score each job
     results = []

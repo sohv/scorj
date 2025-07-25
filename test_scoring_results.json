@@ -79,7 +79,6 @@
       "job_description_length": 789
     }
   },
-  "structured_comments": {},
   "openai_results": {
     "result": {
       "overall_score": 85,
@@ -156,8 +155,7 @@
     },
     "validation": {
       "openai_available": true,
-      "fallback_used": false,
-      "structured_comments_applied": false
+      "fallback_used": false
     }
   }
 }

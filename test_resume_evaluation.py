@@ -16,7 +16,6 @@ load_dotenv()
 try:
     from utils.job_parser import JobDescriptionParser
     from utils.scoring_engine_openai import ScoringEngine
-    from utils.structured_comments import process_user_comments
     
     # Try to import resume parser, fallback if not available
     try:
@@ -91,50 +90,6 @@ Personal Finance Tracker (2022)
 • Developed a web app to track personal expenses and budgets
 • Used Python for backend API and JavaScript for frontend
 • Integrated with bank APIs for automatic transaction import
-"""
-
-    def get_sample_comments(self) -> str:
-        """Sample user comments for testing"""
-        return """
-I'm really excited about this opportunity! I prefer remote work as it allows me better work-life balance. 
-I'm available to start immediately and very motivated to learn new technologies, especially AI and machine learning. 
-I have strong experience in Python and web development, and I'm confident I can contribute effectively to your team.
-I'm also open to relocating if needed for the right opportunity.
-"""
-
-    def get_misaligned_comments(self) -> str:
-        """Sample comments that don't align with JD requirements"""
-        return """
-I love working with Java and Spring Boot frameworks. I have extensive experience in mobile app development with React Native.
-I prefer working in an office environment with close team collaboration. I'm looking for a role focused on frontend development 
-and UI/UX design. I'm also interested in learning more about blockchain and cryptocurrency development.
-"""
-
-    def get_well_aligned_comments(self) -> str:
-        """Sample comments that align well with JD requirements"""
-        return """
-I have 4 years of Python development experience, specifically with Django and Flask frameworks. I've built several 
-RESTful APIs and worked extensively with PostgreSQL databases. I'm experienced with AWS cloud services including 
-EC2, RDS, and S3. I've also worked with Docker containerization and Git version control. I'm excited about this 
-remote opportunity as it matches my preference for distributed work and the tech stack aligns perfectly with my expertise.
-"""
-
-    def get_perfectly_aligned_comments(self) -> str:
-        """Comments that align perfectly across all dimensions"""
-        return """
-I'm thrilled about this Senior Python Developer role! I have 5 years of Python experience with Django and Flask frameworks, 
-exactly matching your requirements. I've built RESTful APIs, worked with PostgreSQL databases, and deployed applications 
-on AWS using Docker. I'm available to start immediately and this remote position is perfect for my work style. 
-I'm also excited about mentoring junior developers as mentioned in the responsibilities. My experience with React.js 
-for frontend integration aligns well with your tech stack needs.
-"""
-
-    def get_misaligned_availability_comments(self) -> str:
-        """Comments showing availability mismatch"""
-        return """
-I'm interested in this position but I can only start in 3 months due to current commitments. I also prefer 
-part-time work (20-25 hours per week) for better work-life balance. I have Python experience but I'm more 
-interested in learning new technologies rather than working with the current tech stack.
 """
 
     def parse_job_from_input(self) -> dict:
@@ -214,48 +169,6 @@ Benefits:
 """
         print("Using sample job description...")
         return self.job_parser.parse_job_description_text(sample_job_text)
-
-    def get_user_comments(self) -> str:
-        """Get user comments from input or use sample"""
-        print("\nUser Comments:")
-        print("1. Enter custom comments")
-        print("2. Use sample comments (general preferences)")
-        print("3. Use misaligned comments (wrong tech stack)")
-        print("4. Use well-aligned comments (good tech match)")
-        print("5. Use perfectly aligned comments (all dimensions match)")
-        print("6. Use availability misaligned comments (timing issues)")
-        
-        choice = input("\nEnter choice (1-6): ").strip()
-        
-        if choice == "1":
-            print("\nEnter your comments about this job/application (press Enter twice when done):")
-            lines = []
-            empty_count = 0
-            while empty_count < 2:
-                line = input()
-                if line == "":
-                    empty_count += 1
-                else:
-                    empty_count = 0
-                lines.append(line)
-            
-            comments = "\n".join(lines).strip()
-            return comments if comments else self.get_sample_comments()
-        elif choice == "3":
-            print("Using misaligned comments...")
-            return self.get_misaligned_comments()
-        elif choice == "4":
-            print("Using well-aligned comments...")
-            return self.get_well_aligned_comments()
-        elif choice == "5":
-            print("Using perfectly aligned comments...")
-            return self.get_perfectly_aligned_comments()
-        elif choice == "6":
-            print("Using availability misaligned comments...")
-            return self.get_misaligned_availability_comments()
-        else:
-            print("Using sample comments...")
-            return self.get_sample_comments()
 
     def get_resume_data(self) -> dict:
         """Get resume data from input or use sample"""
@@ -390,26 +303,18 @@ Benefits:
         # Get inputs
         job_data = self.parse_job_from_input()
         resume_data = self.get_resume_data()
-        user_comments = self.get_user_comments()
         
         print("\n" + "=" * 60)
         print("RUNNING EVALUATION...")
         print("=" * 60)
         
-        # Process user comments
-        print("1. Analyzing user comments...")
-        comment_analysis = process_user_comments(user_comments, job_data)
-        
         # Run scoring evaluation
-        print("2. Evaluating resume against job requirements...")
+        print("Evaluating resume against job requirements...")
         
         evaluation_result = self.scoring_engine.calculate_score(
             resume_data=resume_data,
             job_data=job_data
         )
-        
-        # Add user comments analysis to the result
-        evaluation_result['user_comments_analysis'] = comment_analysis
         
         # Compile complete results
         complete_results = {
@@ -427,15 +332,9 @@ Benefits:
                 "experience_count": len(resume_data.get('experience', [])),
                 "has_summary": bool(resume_data.get('summary'))
             },
-            "user_comments": {
-                "original_text": user_comments,
-                "analysis": comment_analysis
-            },
             "evaluation_results": evaluation_result,
             "summary": {
                 "overall_score": evaluation_result.get('overall_score', 0),
-                "comment_bonus": comment_analysis.get('total_bonus', 0),
-                "total_with_bonus": evaluation_result.get('overall_score', 0) + comment_analysis.get('total_bonus', 0),
                 "key_strengths": evaluation_result.get('strengths', []),
                 "improvement_areas": evaluation_result.get('weaknesses', [])
             }
@@ -475,8 +374,6 @@ Benefits:
         print(f"Evaluation Time: {metadata['timestamp']}")
         print("-" * 40)
         print(f"Overall Score: {summary['overall_score']:.1f}/100")
-        print(f"Comment Bonus: +{summary['comment_bonus']:.1f}")
-        print(f"Total Score: {summary['total_with_bonus']:.1f}/100")
         print("-" * 40)
         
         if summary.get('key_strengths'):

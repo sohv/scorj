@@ -3,7 +3,6 @@ from datetime import datetime
 import logging
 
 from .skills_matcher import SkillsProcessor
-from .structured_comments import process_user_comments
 
 # set up logging
 logging.basicConfig(level=logging.INFO)
@@ -198,37 +197,6 @@ class BaseScoringEngine:
         experience_analysis = structured_analysis.get('experience_analysis', {})
         education_analysis = structured_analysis.get('education_analysis', {})
         
-        # Check for user comments with enhanced contextual integration
-        user_comments = resume_data.get('user_comments', '')
-        user_comments_section = ""
-        structured_comments_data = {}
-        
-        if user_comments:
-            # Process structured comments
-            structured_comments_data = process_user_comments(user_comments, job_data)
-            
-            # Extract company name from job data if available
-            company_name = job_data.get('company', 'the company')
-            
-            # Create enhanced section with structured feedback
-            structured_feedback = structured_comments_data.get('structured_feedback', '')
-            total_bonus = structured_comments_data.get('total_bonus', 0)
-            
-            # IMPORTANT: Only include comments in AI prompt if they provide positive bonus
-            # This prevents misaligned comments from negatively influencing the base score
-            if total_bonus > 0:
-                user_comments_section = f"""
-
-**CANDIDATE CONTEXT:**
-Applying to {job_title} at {company_name}. 
-Structured Profile: {structured_feedback}
-Scoring Bonus Applied: +{total_bonus:.1f} points
-Original Comments: "{user_comments}"
-"""
-            else:
-                # Don't include misaligned comments in the prompt to avoid negative influence
-                user_comments_section = ""
-        
         base_prompt = f"""
 You are a senior technical recruiter with 15+ years of experience. Analyze this resume against the job requirements and provide comprehensive scoring.
 
@@ -237,7 +205,7 @@ Position: {job_title}
 Experience Level: {experience_level}
 Pre-calculated Skills Match: {skills_analysis.get('match_percentage', 0):.1f}%
 Experience: {experience_analysis.get('total_years', 0)} years
-Education: {education_analysis.get('highest_degree', 'Not specified')}{user_comments_section}
+Education: {education_analysis.get('highest_degree', 'Not specified')}
 
 **SCORING METHODOLOGY:**
 Use these exact weights for scoring:
