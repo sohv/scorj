@@ -4,9 +4,8 @@ Base scoring engine with common functionality shared across all scoring engines.
 from typing import Dict, Any, List
 from datetime import datetime
 import logging
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+
+from .skills_matcher import SkillsProcessor
 
 # set up logging
 logging.basicConfig(level=logging.INFO)
@@ -30,81 +29,13 @@ class BaseScoringEngine:
             (0, 39): "Weak Match"
         }
         
-        # TF-IDF vectorizer for semantic skills matching
-        self.vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=1000)
+        # Enhanced skills processor
+        self.skills_processor = SkillsProcessor()
 
-    def _semantic_skills_match(self, resume_skills: List[str], job_skills: List[str]) -> Dict[str, Any]:
-        """Calculate semantic skills matching using TF-IDF and cosine similarity"""
-        if not resume_skills or not job_skills:
-            return {'match_percentage': 0, 'matched_skills': [], 'missing_skills': job_skills}
-        
-        # Combine all skills for vectorization
-        all_skills = resume_skills + job_skills
-        
-        try:
-            # Create TF-IDF vectors
-            skill_vectors = self.vectorizer.fit_transform(all_skills)
-            
-            # Split vectors
-            resume_vectors = skill_vectors[:len(resume_skills)]
-            job_vectors = skill_vectors[len(resume_skills):]
-            
-            # Calculate similarity matrix
-            similarity_matrix = cosine_similarity(resume_vectors, job_vectors)
-            
-            # Find best matches
-            matched_skills = []
-            missing_skills = []
-            
-            for j, job_skill in enumerate(job_skills):
-                # Find best matching resume skill
-                best_match_idx = np.argmax(similarity_matrix[:, j])
-                best_similarity = similarity_matrix[best_match_idx, j]
-                
-                # Threshold for considering a match (0.3 is relatively permissive)
-                if best_similarity > 0.3:
-                    matched_skills.append({
-                        'job_skill': job_skill,
-                        'resume_skill': resume_skills[best_match_idx],
-                        'similarity': float(best_similarity)
-                    })
-                else:
-                    missing_skills.append(job_skill)
-            
-            match_percentage = (len(matched_skills) / len(job_skills)) * 100 if job_skills else 0
-            
-            return {
-                'match_percentage': match_percentage,
-                'matched_skills': matched_skills,
-                'missing_skills': missing_skills,
-                'total_job_skills': len(job_skills),
-                'total_resume_skills': len(resume_skills)
-            }
-            
-        except Exception as e:
-            logger.warning(f"Semantic matching failed, falling back to exact match: {e}")
-            return self._exact_skills_match(resume_skills, job_skills)
-
-    def _exact_skills_match(self, resume_skills: List[str], job_skills: List[str]) -> Dict[str, Any]:
-        """Fallback exact string matching"""
-        resume_set = set(skill.lower().strip() for skill in resume_skills)
-        job_set = set(skill.lower().strip() for skill in job_skills)
-        
-        matched = resume_set.intersection(job_set)
-        missing = job_set - resume_set
-        
-        match_percentage = (len(matched) / len(job_set)) * 100 if job_set else 0
-        
-        return {
-            'match_percentage': match_percentage,
-            'matched_skills': [{'job_skill': skill, 'resume_skill': skill, 'similarity': 1.0} for skill in matched],
-            'missing_skills': list(missing),
-            'total_job_skills': len(job_skills),
-            'total_resume_skills': len(resume_skills)
-        }
+    def _enhanced_skills_match(self, resume_skills: List[str], job_skills: List[str]) -> Dict[str, Any]:
+        return self.skills_processor.match_skills(resume_skills, job_skills)
 
     def _calculate_experience_relevance(self, experience: List[Dict], job_title: str, job_description: str) -> Dict[str, Any]:
-        """Calculate experience relevance with weighted scoring"""
         if not experience:
             return {'relevance_score': 0, 'relevant_years': 0, 'total_years': 0}
         

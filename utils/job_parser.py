@@ -12,12 +12,13 @@ from openai import OpenAI
 
 from config import config
 from utils.error_handling import error_handler, ComponentMonitor, ErrorCategory, ErrorSeverity
-from utils.enhanced_skills_matcher import skills_matcher
+from utils.skills_matcher import SkillsProcessor
 
 class JobDescriptionParser:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.model = "gpt-4o-mini"
+        self.skills_processor = SkillsProcessor()  # Initialize our skills processor
         
         parser_config = config.job_parser
         self.user_agents = parser_config.user_agents
@@ -111,8 +112,8 @@ class JobDescriptionParser:
             error_handler.logger.warning("Could not extract job title")
             return False
         
-        if skills_matcher and isinstance(skills, list) and len(skills) == 0:
-            extracted_skills = skills_matcher.extract_skills_from_text(description)
+        if self.skills_processor and isinstance(skills, list) and len(skills) == 0:
+            extracted_skills = self.skills_processor.extract_skills_from_text(description)
             if len(extracted_skills) == 0:
                 error_handler.logger.warning("No technical skills detected in job description")
         
@@ -243,10 +244,10 @@ class JobDescriptionParser:
         return benefits
 
     def extract_skills(self, description: str) -> List[str]:
-        if skills_matcher:
-            taxonomy_skills = skills_matcher.extract_skills_from_text(description)
+        if self.skills_processor:
+            taxonomy_skills = self.skills_processor.extract_skills_from_text(description)
             ai_skills = self._extract_skills_openai(description)
-            all_skills = list(taxonomy_skills.union(set(ai_skills)))
+            all_skills = list(set(taxonomy_skills + ai_skills))  # Combine and deduplicate
             error_handler.logger.info(f"Extracted {len(all_skills)} skills using enhanced matching")
             return all_skills
         else:
@@ -362,10 +363,14 @@ class JobDescriptionParser:
         return 'not specified'
 
     def parse_job_description_text(self, text: str) -> Dict[str, str]:
-        title_match = re.search(r'^([^(]+?)(?:\s*\([^)]*\))?', text.strip())
-        title = title_match.group(1).strip() if title_match else "Unknown Position"
+        # Extract title - first line (more flexible)
+        lines = [line.strip() for line in text.strip().split('\n') if line.strip()]
+        title = lines[0] if lines else "Unknown Position"
         
-        company_match = re.search(r'(?i)about\s+([^:]+):', text)
+        # Extract company - look for "Company:" pattern
+        company_match = re.search(r'(?i)company:\s*([^\n]+)', text)
+        if not company_match:
+            company_match = re.search(r'(?i)about\s+([^:]+):', text)
         company = company_match.group(1).strip() if company_match else "Unknown Company"
         
         location_match = re.search(r'(?i)location:\s*([^\n]+)', text)
@@ -383,7 +388,7 @@ class JobDescriptionParser:
             'description': description,
             'requirements': requirements,
             'benefits': [],
-            'skills': skills,
+            'required_skills': skills,
             'experience_level': experience
         }
 

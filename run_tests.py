@@ -28,14 +28,14 @@ def run_command(cmd, description):
             print(result.stderr)
         
         if result.returncode == 0:
-            print("✅ PASSED")
+            print("PASSED")
         else:
-            print(f"❌ FAILED (exit code: {result.returncode})")
+            print(f"FAILED (exit code: {result.returncode})")
         
         return result.returncode == 0
         
     except Exception as e:
-        print(f"❌ ERROR: {e}")
+        print(f"ERROR: {e}")
         return False
 
 def main():
@@ -66,7 +66,7 @@ Examples:
     try:
         subprocess.run(['pytest', '--version'], capture_output=True, check=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("❌ pytest not found. Installing...")
+        print("pytest not found. Installing...")
         subprocess.run([sys.executable, '-m', 'pip', 'install', 'pytest', 'pytest-cov'])
     
     if command == 'unit':
@@ -111,7 +111,7 @@ Examples:
             print("\nSome legacy tests failed.")
     
     else:
-        print(f"❌ Unknown command: {command}")
+        print(f"Unknown command: {command}")
         print("Use 'python run_tests.py' without arguments to see available commands.")
 
 if __name__ == '__main__':

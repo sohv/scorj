@@ -14,16 +14,13 @@ from utils.resume_parser import ResumeParser
 
 
 class TestResumeParser:
-    """Test cases for ResumeParser class."""
     
     @pytest.fixture
     def parser(self):
-        """Create a ResumeParser instance for testing."""
         return ResumeParser()
     
     @pytest.fixture
     def sample_resume_text(self):
-        """Sample resume text for testing."""
         return """
         John Doe
         Senior Software Engineer
@@ -44,14 +41,12 @@ class TestResumeParser:
         """
     
     def test_parser_initialization(self, parser):
-        """Test that parser initializes correctly."""
         assert parser is not None
         assert hasattr(parser, 'parse_pdf')
         assert hasattr(parser, 'parse_docx')
         assert hasattr(parser, '_structure_text')
     
     def test_structure_text_basic(self, parser, sample_resume_text):
-        """Test basic text structuring functionality."""
         result = parser._structure_text(sample_resume_text)
         
         assert result is not None
@@ -62,17 +57,18 @@ class TestResumeParser:
         assert 'education' in result
     
     def test_skills_extraction(self, parser, sample_resume_text):
-        """Test that skills are extracted correctly."""
         result = parser._structure_text(sample_resume_text)
         skills = result.get('skills', [])
         
         assert len(skills) > 0
-        # Check for some expected skills
-        skill_names = [skill.get('skill', '').lower() for skill in skills]
+        # Check for some expected skills (handle both string and object formats)
+        if skills and isinstance(skills[0], str):
+            skill_names = [skill.lower() for skill in skills]
+        else:
+            skill_names = [skill.get('skill', '').lower() for skill in skills]
         assert any('python' in skill for skill in skill_names)
     
     def test_experience_extraction(self, parser, sample_resume_text):
-        """Test that experience is extracted correctly."""
         result = parser._structure_text(sample_resume_text)
         experience = result.get('experience', [])
         
@@ -84,7 +80,6 @@ class TestResumeParser:
         assert 'date' in exp
     
     def test_education_extraction(self, parser, sample_resume_text):
-        """Test that education is extracted correctly."""
         result = parser._structure_text(sample_resume_text)
         education = result.get('education', [])
         
@@ -95,7 +90,6 @@ class TestResumeParser:
         assert 'institution' in edu
     
     def test_contact_info_extraction(self, parser, sample_resume_text):
-        """Test that contact info is extracted correctly."""
         result = parser._structure_text(sample_resume_text)
         contact_info = result.get('contact_info', {})
         

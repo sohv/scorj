@@ -1,7 +1,3 @@
-"""
-ResumeRoast Configuration Management
-Centralized configuration for all system components
-"""
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -10,7 +6,6 @@ from dataclasses import dataclass
 
 @dataclass
 class JobParserConfig:
-    """Configuration for job description parsing"""
     max_retries: int = 3
     retry_delay: float = 2.0
     timeout: int = 15
@@ -30,7 +25,6 @@ class JobParserConfig:
 
 @dataclass
 class ScoringConfig:
-    """Configuration for scoring engines"""
     # Model configurations
     openai_model: str = "gpt-4o-mini"
     gemini_model: str = "gemini-2.0-flash"
@@ -63,7 +57,6 @@ class ScoringConfig:
 
 @dataclass
 class CacheConfig:
-    """Configuration for caching system"""
     base_dir: str = "cache"
     job_cache_dir: str = "job_descriptions"
     resume_cache_dir: str = "resumes"
@@ -74,7 +67,7 @@ class CacheConfig:
 
 @dataclass
 class APIConfig:
-    """Configuration for API keys and endpoints"""
+    # Default values are set to None and should be provided via environment variables
     openai_api_key: str = None
     gemini_api_key: str = None
     max_requests_per_minute: int = 60
@@ -86,7 +79,6 @@ class APIConfig:
 
 @dataclass
 class LoggingConfig:
-    """Configuration for logging"""
     level: str = "INFO"
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     file_path: str = "logs/resumeroast.log"
@@ -95,7 +87,6 @@ class LoggingConfig:
 
 
 class ResumeRoastConfig:
-    """Main configuration class"""
     
     def __init__(self):
         self.job_parser = JobParserConfig()
@@ -108,7 +99,6 @@ class ResumeRoastConfig:
         self._create_directories()
     
     def _create_directories(self):
-        """Create necessary directories for caching and logging"""
         directories = [
             self.cache.base_dir,
             f"{self.cache.base_dir}/{self.cache.job_cache_dir}",
@@ -121,14 +111,12 @@ class ResumeRoastConfig:
             Path(directory).mkdir(parents=True, exist_ok=True)
     
     def validate_api_keys(self) -> Dict[str, bool]:
-        """Validate that required API keys are available"""
         return {
             "openai": bool(self.api.openai_api_key),
             "gemini": bool(self.api.gemini_api_key)
         }
     
     def get_skills_taxonomy(self) -> Dict[str, List[str]]:
-        """Get predefined skills taxonomy for better matching"""
         return {
             "programming_languages": [
                 "Python", "JavaScript", "TypeScript", "Java", "C++", "C#", "Go", "Rust", "Ruby", "PHP",
@@ -160,7 +148,6 @@ class ResumeRoastConfig:
         }
     
     def get_experience_level_mapping(self) -> Dict[str, Dict]:
-        """Get experience level mappings with detailed criteria"""
         return {
             "entry": {
                 "years_range": (0, 2),

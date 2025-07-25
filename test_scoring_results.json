@@ -1,0 +1,160 @@
+{
+  "overall_score": 85,
+  "confidence_level": "High",
+  "score_breakdown": {
+    "skills_score": 85,
+    "experience_score": 90,
+    "education_score": 100,
+    "domain_score": 80
+  },
+  "match_category": "Good match with minor gaps",
+  "summary": "John Doe is a strong candidate for the Senior Full Stack Developer position, demonstrating relevant experience and a solid educational background. While he meets most technical requirements, there are minor gaps in specific skills related to Kubernetes and advanced cloud services.",
+  "strengths": [
+    "5+ years of relevant experience in web development",
+    "Proficient in required programming languages (Python, JavaScript, React)",
+    "Strong experience with CI/CD pipelines and containerization (Docker)",
+    "Solid educational background with a Master's degree in Computer Science",
+    "Leadership experience in mentoring and team management"
+  ],
+  "concerns": [
+    "Lacks experience with Kubernetes, which is preferred for the role",
+    "Limited mention of advanced cloud services beyond AWS",
+    "No explicit examples of problem-solving or communication skills in the resume"
+  ],
+  "missing_skills": [
+    "Kubernetes",
+    "Advanced cloud services experience"
+  ],
+  "matching_skills": [
+    "Python",
+    "JavaScript",
+    "React",
+    "Docker",
+    "AWS",
+    "PostgreSQL",
+    "FastAPI",
+    "Django",
+    "Git",
+    "Jenkins"
+  ],
+  "experience_assessment": {
+    "relevant_years": 5,
+    "role_progression": "Demonstrates upward progression from Software Engineer to Senior Software Developer",
+    "industry_fit": "Experience aligns well with web development and software engineering roles"
+  },
+  "recommendations": [
+    "Gain experience with Kubernetes to enhance cloud service skills",
+    "Highlight specific problem-solving and communication skills in the resume",
+    "Consider contributing to open-source projects to demonstrate advanced cloud service capabilities"
+  ],
+  "risk_factors": [
+    "Potential lack of experience with Kubernetes may limit adaptability to the team's infrastructure",
+    "Limited evidence of soft skills could impact team dynamics and collaboration"
+  ],
+  "final_score": 85,
+  "structured_analysis": {
+    "skills_analysis": {},
+    "experience_analysis": {
+      "total_years": 5,
+      "relevant_years": 1.4880952380952381,
+      "relevance_score": 29.761904761904763,
+      "relevance_ratio": 0.2976190476190476,
+      "number_of_positions": 2,
+      "required_experience_level": "mid",
+      "experience_level_match": {
+        "meets_requirement": true,
+        "required_range": "3-6 years",
+        "actual_years": 5,
+        "level_match_score": 100
+      }
+    },
+    "education_analysis": {
+      "highest_degree": "Master of Science in Computer Science",
+      "education_count": 2,
+      "degree_level_score": 80
+    },
+    "metadata": {
+      "analysis_timestamp": "2025-07-25T14:53:31.622947",
+      "resume_length": 816,
+      "job_description_length": 789
+    }
+  },
+  "openai_results": {
+    "result": {
+      "overall_score": 85,
+      "confidence_level": "High",
+      "score_breakdown": {
+        "skills_score": 85,
+        "experience_score": 90,
+        "education_score": 100,
+        "domain_score": 80
+      },
+      "match_category": "Good match with minor gaps",
+      "summary": "John Doe is a strong candidate for the Senior Full Stack Developer position, demonstrating relevant experience and a solid educational background. While he meets most technical requirements, there are minor gaps in specific skills related to Kubernetes and advanced cloud services.",
+      "strengths": [
+        "5+ years of relevant experience in web development",
+        "Proficient in required programming languages (Python, JavaScript, React)",
+        "Strong experience with CI/CD pipelines and containerization (Docker)",
+        "Solid educational background with a Master's degree in Computer Science",
+        "Leadership experience in mentoring and team management"
+      ],
+      "concerns": [
+        "Lacks experience with Kubernetes, which is preferred for the role",
+        "Limited mention of advanced cloud services beyond AWS",
+        "No explicit examples of problem-solving or communication skills in the resume"
+      ],
+      "missing_skills": [
+        "Kubernetes",
+        "Advanced cloud services experience"
+      ],
+      "matching_skills": [
+        "Python",
+        "JavaScript",
+        "React",
+        "Docker",
+        "AWS",
+        "PostgreSQL",
+        "FastAPI",
+        "Django",
+        "Git",
+        "Jenkins"
+      ],
+      "experience_assessment": {
+        "relevant_years": 5,
+        "role_progression": "Demonstrates upward progression from Software Engineer to Senior Software Developer",
+        "industry_fit": "Experience aligns well with web development and software engineering roles"
+      },
+      "recommendations": [
+        "Gain experience with Kubernetes to enhance cloud service skills",
+        "Highlight specific problem-solving and communication skills in the resume",
+        "Consider contributing to open-source projects to demonstrate advanced cloud service capabilities"
+      ],
+      "risk_factors": [
+        "Potential lack of experience with Kubernetes may limit adaptability to the team's infrastructure",
+        "Limited evidence of soft skills could impact team dynamics and collaboration"
+      ]
+    },
+    "processing_info": {
+      "model_used": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "processing_timestamp": "2025-07-25T14:53:40.224955",
+      "prompt_tokens": 867,
+      "completion_tokens": 463,
+      "total_tokens": 1330
+    }
+  },
+  "transparency": {
+    "methodology": "OpenAI GPT + Structured Analysis",
+    "processing_time_seconds": 8.6,
+    "timestamp": "2025-07-25T14:53:40.225008",
+    "score_components": {
+      "structured_score": 0,
+      "openai_score": 85,
+      "final_score": 85
+    },
+    "validation": {
+      "openai_available": true,
+      "fallback_used": false
+    }
+  }
+}

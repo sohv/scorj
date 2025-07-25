@@ -21,24 +21,24 @@ def test_fixed_weights():
     assert engine.weights['education_match'] == 0.15
     assert engine.weights['domain_expertise'] == 0.20
     
-    print("✅ Fixed weight system working correctly")
+    print("Fixed weight system working correctly")
 
-def test_semantic_skills_matching():
+def test_enhanced_skills_matching():
     engine = BaseScoringEngine()
     
-    resume_skills = ["Python programming", "Machine Learning", "Data Analysis", "JavaScript"]
+    resume_skills = ["Python", "Machine Learning", "Data Analysis", "JavaScript"]
     job_skills = ["Python", "ML", "Data Science", "React"]
     
-    result = engine._semantic_skills_match(resume_skills, job_skills)
+    result = engine._enhanced_skills_match(resume_skills, job_skills)
     
-    print(f"Skills match result: {result}")
+    print(f"Enhanced skills match result: {result}")
     print(f"Match percentage: {result['match_percentage']:.1f}%")
     print(f"Matched skills: {result['matched_skills']}")
     print(f"Missing skills: {result['missing_skills']}")
     
-    # Should find semantic matches
+    # Should find enhanced matches
     assert result['match_percentage'] > 0
-    print("✅ Semantic skills matching working correctly")
+    print("Enhanced skills matching working correctly")
 
 def test_experience_relevance():
     engine = BaseScoringEngine()
@@ -68,7 +68,7 @@ def test_experience_relevance():
     
     # Should find high relevance due to Python/Django match
     assert result['relevance_score'] > 50
-    print("✅ Experience relevance calculation working correctly")
+    print("Experience relevance calculation working correctly")
 
 def test_simplified_scoring():
     engine = BaseScoringEngine()
@@ -94,7 +94,7 @@ def test_simplified_scoring():
     assert score_50 == "Good Match"
     assert score_20 == "Weak Match"
     
-    print("✅ Simplified 3-tier scoring working correctly")
+    print("Simplified 3-tier scoring working correctly")
 
 if __name__ == "__main__":
     print("Testing improved scoring engine functionality...\n")
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         test_fixed_weights()
         print()
         
-        test_semantic_skills_matching()
+        test_enhanced_skills_matching()
         print()
         
         test_experience_relevance()

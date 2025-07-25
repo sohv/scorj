@@ -6,12 +6,9 @@ passlib[bcrypt]
 pydantic
 python-dotenv
 python-docx
-PyPDF2
+pypdf
 docling
-google-generativeai
 sentence-transformers
-numpy
-scikit-learn
 streamlit
 gradio
 motor

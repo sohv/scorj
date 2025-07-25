@@ -16,21 +16,17 @@ from utils.base_scoring_engine import BaseScoringEngine
 
 
 class TestBaseScoringEngine:
-    """Test cases for BaseScoringEngine class."""
     
     @pytest.fixture
     def base_engine(self):
-        """Create a BaseScoringEngine instance for testing."""
         return BaseScoringEngine()
     
     def test_base_engine_initialization(self, base_engine):
-        """Test that base engine initializes correctly."""
         assert base_engine is not None
         assert hasattr(base_engine, 'weights')
         assert hasattr(base_engine, 'score_ranges')
     
     def test_weights_configuration(self, base_engine):
-        """Test that weights are properly configured."""
         weights = base_engine.weights
         
         assert 'skills_match' in weights
@@ -42,8 +38,7 @@ class TestBaseScoringEngine:
         total_weight = sum(weights.values())
         assert abs(total_weight - 1.0) < 0.01
     
-    def test_score_ranges(self, base_engine):
-        """Test that score ranges are properly defined."""
+    def test_score_ranges_configuration(self, base_engine):
         score_ranges = base_engine.score_ranges
         
         assert len(score_ranges) > 0
@@ -56,7 +51,6 @@ class TestBaseScoringEngine:
         assert max_score >= 100
     
     def test_degree_scoring(self, base_engine):
-        """Test degree scoring functionality."""
         # Test different degree levels
         phd_score = base_engine._get_degree_score("PhD in Computer Science")
         masters_score = base_engine._get_degree_score("Master of Science")
@@ -68,7 +62,6 @@ class TestBaseScoringEngine:
         assert bachelors_score == 60
     
     def test_experience_calculation(self, base_engine):
-        """Test experience years calculation."""
         sample_experience = [
             {"date": "2020-2023", "position": "Senior Developer"},
             {"date": "2018-2020", "position": "Developer"}
@@ -80,16 +73,13 @@ class TestBaseScoringEngine:
 
 
 class TestOpenAIScoringEngine:
-    """Test cases for OpenAI Scoring Engine."""
     
     @pytest.fixture
     def openai_engine(self):
-        """Create an OpenAI scoring engine for testing."""
         return OpenAIScoringEngine()
     
     @pytest.fixture
     def sample_resume_data(self):
-        """Sample resume data for testing."""
         return {
             'full_text': 'John Doe, Senior Developer with 5 years experience...',
             'skills': [
@@ -106,7 +96,6 @@ class TestOpenAIScoringEngine:
     
     @pytest.fixture
     def sample_job_data(self):
-        """Sample job data for testing."""
         return {
             'title': 'Senior Full Stack Developer',
             'description': 'Looking for experienced developer...',
@@ -115,14 +104,12 @@ class TestOpenAIScoringEngine:
         }
     
     def test_openai_engine_initialization(self, openai_engine):
-        """Test that OpenAI engine initializes correctly."""
         assert openai_engine is not None
         assert isinstance(openai_engine, BaseScoringEngine)
         assert hasattr(openai_engine, 'calculate_score')
     
     @pytest.mark.skipif(not os.getenv('OPENAI_API_KEY'), reason="OpenAI API key not available")
     def test_calculate_score_integration(self, openai_engine, sample_resume_data, sample_job_data):
-        """Integration test for score calculation (requires API key)."""
         result = openai_engine.calculate_score(sample_resume_data, sample_job_data)
         
         assert result is not None
@@ -135,8 +122,7 @@ class TestOpenAIScoringEngine:
         assert 0 <= score <= 100
     
     def test_structured_analysis(self, openai_engine, sample_resume_data, sample_job_data):
-        """Test structured analysis component."""
-        structured_analysis = openai_engine._perform_structured_analysis(
+        structured_analysis = openai_engine._analyze_structured_data(
             sample_resume_data, sample_job_data
         )
         
@@ -145,9 +131,7 @@ class TestOpenAIScoringEngine:
         assert 'experience_analysis' in structured_analysis
         assert 'education_analysis' in structured_analysis
     
-    @patch('openai.OpenAI')
-    def test_calculate_score_mocked(self, mock_openai, openai_engine, sample_resume_data, sample_job_data):
-        """Test score calculation with mocked OpenAI API."""
+    def test_calculate_score_mocked(self, openai_engine, sample_resume_data, sample_job_data):
         # Mock the OpenAI response
         mock_response = Mock()
         mock_response.choices = [Mock()]
@@ -167,13 +151,14 @@ class TestOpenAIScoringEngine:
             "risk_factors": ["Technology gap"]
         }
         '''
-        
+    
+        # Mock the client directly on the instance
         mock_client = Mock()
         mock_client.chat.completions.create.return_value = mock_response
-        mock_openai.return_value = mock_client
-        
+        openai_engine.openai_client = mock_client
+    
         result = openai_engine.calculate_score(sample_resume_data, sample_job_data)
-        
+    
         assert result is not None
         assert result['overall_score'] == 85
         assert result['confidence_level'] == 'High'

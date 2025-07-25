@@ -14,8 +14,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.resume_parser import ResumeParser
 from utils.job_parser import JobDescriptionParser
 from utils.scoring_engine_openai import ScoringEngine as OpenAIScoringEngine
-from utils.scoring_engine_gemini import GeminiScoringEngine
-from utils.scoring_engine_dual import DualScoringEngine
 
 # Initialize FastAPI app
 app = FastAPI(title="ResumeRoast API")
@@ -29,37 +27,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize parsers and scoring engines
+# Initialize parsers and scoring engine
 resume_parser = ResumeParser()
 job_parser = JobDescriptionParser()
-openai_engine = OpenAIScoringEngine()
-gemini_engine = GeminiScoringEngine()
-dual_engine = DualScoringEngine()
-
-# Default to dual engine for comprehensive analysis
-scoring_engine = dual_engine
+scoring_engine = OpenAIScoringEngine()
 
 @app.post("/resume/score")
 async def score_resume(
     resume: UploadFile = File(...),
     job_url: Optional[str] = Form(None),
     job_description: Optional[str] = Form(None),
-    user_comments: Optional[str] = Form(None),  # NEW: User comments for context
-    model: Optional[str] = Form("dual")  # dual, openai, gemini
+    user_comments: Optional[str] = Form(None)  # User comments for context
 ):
-    
-    # Validate model choice
-    valid_models = ["dual", "openai", "gemini"]
-    if model not in valid_models:
-        raise HTTPException(status_code=400, detail=f"Invalid model choice. Must be one of: {valid_models}")
-    
-    # Select scoring engine based on model choice
-    if model == "openai":
-        selected_engine = openai_engine
-    elif model == "gemini":
-        selected_engine = gemini_engine
-    else:  # dual
-        selected_engine = dual_engine
     
     # Validate that either job_url or job_description is provided
     if not job_url and not job_description:
@@ -104,7 +83,7 @@ async def score_resume(
             raise HTTPException(status_code=400, detail="Could not parse job description text")
     
     # Calculate score
-    result = selected_engine.calculate_score(resume_data, job_data)
+    result = scoring_engine.calculate_score(resume_data, job_data)
     score = result.get('final_score', result.get('overall_score', 0))
     feedback = result
     
@@ -113,29 +92,15 @@ async def score_resume(
         "feedback": feedback,
         "job_title": job_data.get("title", "Unknown"),
         "company": job_data.get("company", "Unknown"),
-        "model_used": model
+        "model_used": "openai"
     }
 
 @app.post("/resume/compare")
 async def compare_multiple_jobs(
     resume: UploadFile = File(...),
     job_urls: str = Form(...),
-    user_comments: Optional[str] = Form(None),  # NEW: User comments for context
-    model: Optional[str] = Form("dual")  # dual, openai, gemini
+    user_comments: Optional[str] = Form(None)  # User comments for context
 ):
-    
-    # Validate model choice
-    valid_models = ["dual", "openai", "gemini"]
-    if model not in valid_models:
-        raise HTTPException(status_code=400, detail=f"Invalid model choice. Must be one of: {valid_models}")
-    
-    # Select scoring engine based on model choice
-    if model == "openai":
-        selected_engine = openai_engine
-    elif model == "gemini":
-        selected_engine = gemini_engine
-    else:  # dual
-        selected_engine = dual_engine
     
     # Parse job URLs from form data (assuming they're newline-separated)
     if not job_urls or not job_urls.strip():
@@ -182,7 +147,7 @@ async def compare_multiple_jobs(
             })
             continue
             
-        result = selected_engine.calculate_score(resume_data, job_data)
+        result = scoring_engine.calculate_score(resume_data, job_data)
         score = result.get('final_score', result.get('overall_score', 0))
         feedback = result
         results.append({
@@ -191,7 +156,7 @@ async def compare_multiple_jobs(
             "company": job_data.get("company", "Unknown"),
             "score": score,
             "feedback": feedback,
-            "model_used": model
+            "model_used": "openai"
         })
     
     return results
@@ -207,85 +172,48 @@ async def get_available_models():
     return {
         "available_models": [
             {
-                "name": "dual",
-                "description": "Comprehensive analysis using both OpenAI and Gemini for best accuracy",
-                "features": ["OpenAI GPT-4o-mini", "Google Gemini 1.5-pro", "Consensus scoring", "Transparency metrics"],
-                "recommended": True
-            },
-            {
                 "name": "openai",
                 "description": "Fast and reliable analysis using OpenAI GPT-4o-mini",
                 "features": ["OpenAI GPT-4o-mini", "Structured analysis", "Quick processing"],
-                "recommended": False
-            },
-            {
-                "name": "gemini",
-                "description": "Advanced analysis using Google Gemini 1.5-pro",
-                "features": ["Google Gemini 1.5-pro", "Detailed insights", "Creative feedback"],
-                "recommended": False
+                "recommended": True
             }
         ],
-        "default_model": "dual"
+        "default_model": "openai"
     }
 
 # AI Chat endpoint for scoring insights
 @app.post("/ai/chat")
 async def chat_with_ai(
     question: str = Form(...),
-    model: Optional[str] = Form("openai"),  # openai or gemini
     context: Optional[str] = Form(None)  # Optional context about recent scoring
 ):
     
-    # Validate model choice
-    valid_models = ["openai", "gemini"]
-    if model not in valid_models:
-        raise HTTPException(status_code=400, detail=f"Invalid model choice. Must be one of: {valid_models}")
+    import openai
     
-    if model == "openai":
-        import openai
-        
-        messages = [
-            {
-                "role": "system", 
-                "content": "You are a senior technical recruiter AI assistant. Help users understand resume scoring decisions, provide career advice, and explain recruitment insights. Be concise, helpful, and professional."
-            },
-            {
-                "role": "user",
-                "content": f"Context: {context}\n\nQuestion: {question}" if context else question
-            }
-        ]
-        
-        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages,
-            max_tokens=500,
-            temperature=0.7
-        )
-        
-        return {
-            "response": response.choices[0].message.content,
-            "model_used": "openai",
-            "success": True
+    messages = [
+        {
+            "role": "system", 
+            "content": "You are a senior technical recruiter AI assistant. Help users understand resume scoring decisions, provide career advice, and explain recruitment insights. Be concise, helpful, and professional."
+        },
+        {
+            "role": "user",
+            "content": f"Context: {context}\n\nQuestion: {question}" if context else question
         }
-        
-    elif model == "gemini":
-        import google.generativeai as genai
-        
-        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-        gemini_model = genai.GenerativeModel('gemini-2.0-flash')
-        
-        system_prompt = "You are a senior technical recruiter AI assistant. Help users understand resume scoring decisions, provide career advice, and explain recruitment insights. Be concise, helpful, and professional."
-        
-        full_prompt = f"{system_prompt}\n\nContext: {context}\n\nQuestion: {question}" if context else f"{system_prompt}\n\nQuestion: {question}"
-        
-        response = gemini_model.generate_content(full_prompt)
-        
-        return {
-            "response": response.text,
-            "model_used": "gemini", 
-            "success": True
-        }
+    ]
+    
+    client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        max_tokens=500,
+        temperature=0.7
+    )
+    
+    return {
+        "response": response.choices[0].message.content,
+        "model_used": "openai",
+        "success": True
+    }
 
 # Alternative endpoint for debugging
 @app.get("/test")
