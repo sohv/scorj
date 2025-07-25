@@ -250,8 +250,6 @@ if st.session_state.scoring_result:
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
         
-        # Using OpenAI for chat
-        chat_model = "openai"
         st.info("**AI Chat**")
         
         # Create scoring context for AI
@@ -296,15 +294,15 @@ if st.session_state.scoring_result:
         
         # Process AI chat when user submits a question
         if user_question and user_question.strip():
-            with st.spinner(f"Getting response from {chat_model.upper()}..."):
-                chat_response = chat_with_ai(user_question, chat_model, scoring_context)
+            with st.spinner("Getting AI response..."):
+                chat_response = chat_with_ai(user_question, scoring_context)
                 
                 if chat_response and chat_response.get('success'):
                     # Add to chat history
                     st.session_state.chat_history.append({
                         "question": user_question,
                         "answer": chat_response.get('response', ''),
-                        "model": chat_response.get('model_used', chat_model),
+                        "model": chat_response.get('model_used', 'openai'),
                         "timestamp": datetime.now().strftime("%H:%M:%S")
                     })
                     
