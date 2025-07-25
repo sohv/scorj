@@ -122,7 +122,7 @@ class TestOpenAIScoringEngine:
         assert 0 <= score <= 100
     
     def test_structured_analysis(self, openai_engine, sample_resume_data, sample_job_data):
-        structured_analysis = openai_engine._perform_structured_analysis(
+        structured_analysis = openai_engine._analyze_structured_data(
             sample_resume_data, sample_job_data
         )
         
@@ -131,8 +131,7 @@ class TestOpenAIScoringEngine:
         assert 'experience_analysis' in structured_analysis
         assert 'education_analysis' in structured_analysis
     
-    @patch('openai.OpenAI')
-    def test_calculate_score_mocked(self, mock_openai, openai_engine, sample_resume_data, sample_job_data):
+    def test_calculate_score_mocked(self, openai_engine, sample_resume_data, sample_job_data):
         # Mock the OpenAI response
         mock_response = Mock()
         mock_response.choices = [Mock()]
@@ -152,13 +151,14 @@ class TestOpenAIScoringEngine:
             "risk_factors": ["Technology gap"]
         }
         '''
-        
+    
+        # Mock the client directly on the instance
         mock_client = Mock()
         mock_client.chat.completions.create.return_value = mock_response
-        mock_openai.return_value = mock_client
-        
+        openai_engine.openai_client = mock_client
+    
         result = openai_engine.calculate_score(sample_resume_data, sample_job_data)
-        
+    
         assert result is not None
         assert result['overall_score'] == 85
         assert result['confidence_level'] == 'High'

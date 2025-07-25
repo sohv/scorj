@@ -36,6 +36,12 @@ class ResumeParser:
             prompt = f"""
             Analyze the following resume text and extract structured information. Return a JSON object with the following structure:
             {{
+                "contact_info": {{
+                    "name": "full name",
+                    "email": "email address",
+                    "phone": "phone number",
+                    "location": "location/address"
+                }},
                 "sections": {{
                     "education": "education section content",
                     "experience": "work experience section content", 
@@ -46,7 +52,7 @@ class ResumeParser:
                 "skills": ["skill1", "skill2", "skill3"],
                 "experience": [
                     {{
-                        "title": "job title",
+                        "position": "job title",
                         "company": "company name",
                         "date": "employment period",
                         "description": "job description"
@@ -62,8 +68,9 @@ class ResumeParser:
                 ]
             }}
             
+            Extract contact information from the resume header.
             Extract all relevant skills, including technical skills, programming languages, frameworks, tools, methodologies, and soft skills.
-            For experience, extract job titles, companies, employment periods, and detailed descriptions.
+            For experience, extract job titles (as "position"), companies, employment periods, and detailed descriptions.
             For education, extract degrees, institutions, graduation dates, and any relevant details.
             
             Resume text:
@@ -84,6 +91,7 @@ class ResumeParser:
             
             structured_text = {
                 'full_text': text,
+                'contact_info': parsed_data.get('contact_info', {}),
                 'sections': parsed_data.get('sections', {}),
                 'skills': parsed_data.get('skills', []),
                 'experience': parsed_data.get('experience', []),
@@ -99,11 +107,26 @@ class ResumeParser:
     def _structure_text_regex(self, text: str) -> Dict[str, str]:
         structured_text = {
             'full_text': text,
+            'contact_info': {},
             'sections': {},
             'skills': [],
             'experience': [],
             'education': []
         }
+
+        # Extract basic contact info using regex
+        email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
+        if email_match:
+            structured_text['contact_info']['email'] = email_match.group()
+
+        phone_match = re.search(r'[\+]?[1-9]?[\s-]?\(?[0-9]{3}\)?[\s-]?[0-9]{3}[\s-]?[0-9]{4}', text)
+        if phone_match:
+            structured_text['contact_info']['phone'] = phone_match.group()
+
+        # Extract name from first line (simple heuristic)
+        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        if lines:
+            structured_text['contact_info']['name'] = lines[0]
 
         # split text into lines
         lines = text.split('\n')

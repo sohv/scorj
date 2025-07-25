@@ -111,8 +111,11 @@ class TestIntegrationWorkflow:
         assert len(resume_data['experience']) > 0
         assert len(job_data['required_skills']) > 0
         
-        # Check for skill matching potential
-        resume_skills = [skill.get('skill', '').lower() for skill in resume_data['skills']]
+        # Check for skill matching potential (handle both string and object formats)
+        if resume_data['skills'] and isinstance(resume_data['skills'][0], str):
+            resume_skills = [skill.lower() for skill in resume_data['skills']]
+        else:
+            resume_skills = [skill.get('skill', '').lower() for skill in resume_data['skills']]
         job_skills = [skill.lower() for skill in job_data['required_skills']]
         
         common_skills = set(resume_skills) & set(job_skills)

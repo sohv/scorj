@@ -363,10 +363,14 @@ class JobDescriptionParser:
         return 'not specified'
 
     def parse_job_description_text(self, text: str) -> Dict[str, str]:
-        title_match = re.search(r'^([^(]+?)(?:\s*\([^)]*\))?', text.strip())
-        title = title_match.group(1).strip() if title_match else "Unknown Position"
+        # Extract title - first line (more flexible)
+        lines = [line.strip() for line in text.strip().split('\n') if line.strip()]
+        title = lines[0] if lines else "Unknown Position"
         
-        company_match = re.search(r'(?i)about\s+([^:]+):', text)
+        # Extract company - look for "Company:" pattern
+        company_match = re.search(r'(?i)company:\s*([^\n]+)', text)
+        if not company_match:
+            company_match = re.search(r'(?i)about\s+([^:]+):', text)
         company = company_match.group(1).strip() if company_match else "Unknown Company"
         
         location_match = re.search(r'(?i)location:\s*([^\n]+)', text)
@@ -384,7 +388,7 @@ class JobDescriptionParser:
             'description': description,
             'requirements': requirements,
             'benefits': [],
-            'skills': skills,
+            'required_skills': skills,
             'experience_level': experience
         }
 

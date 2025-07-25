@@ -1,0 +1,152 @@
+{
+  "overall_score": 82,
+  "confidence_level": "High",
+  "score_breakdown": {
+    "skills_score": 85,
+    "experience_score": 80,
+    "education_score": 100,
+    "domain_score": 80
+  },
+  "match_category": "Good match with minor gaps",
+  "summary": "John Doe presents a strong candidacy for the Senior Full Stack Developer position, demonstrating relevant technical skills and solid experience in web development. While he meets most requirements, there are minor gaps in specific areas such as Kubernetes experience.",
+  "strengths": [
+    "Strong technical skills in Python, JavaScript, and React",
+    "Experience with cloud services (AWS)",
+    "Proven leadership experience managing a team",
+    "Solid educational background with a Master's degree",
+    "Experience with CI/CD pipelines"
+  ],
+  "concerns": [
+    "Lack of experience with Kubernetes",
+    "Limited information on problem-solving and communication skills",
+    "No mention of mentoring junior developers"
+  ],
+  "missing_skills": [
+    "Kubernetes"
+  ],
+  "matching_skills": [
+    "Python",
+    "JavaScript",
+    "React",
+    "AWS",
+    "Docker",
+    "PostgreSQL",
+    "CI/CD"
+  ],
+  "experience_assessment": {
+    "relevant_years": 5,
+    "role_progression": "Demonstrates upward progression from Software Engineer to Senior Software Developer",
+    "industry_fit": "Experience aligns well with web development and software engineering roles"
+  },
+  "recommendations": [
+    "Gain experience with Kubernetes to enhance cloud deployment skills",
+    "Highlight problem-solving and communication skills in future applications",
+    "Include examples of mentoring or leading junior developers"
+  ],
+  "risk_factors": [
+    "Potential lack of experience in a fully cloud-native environment",
+    "Limited exposure to mentoring roles may affect team dynamics"
+  ],
+  "final_score": 82,
+  "structured_analysis": {
+    "skills_analysis": {},
+    "experience_analysis": {
+      "total_years": 5,
+      "relevant_years": 1.4880952380952381,
+      "relevance_score": 29.761904761904763,
+      "relevance_ratio": 0.2976190476190476,
+      "number_of_positions": 2,
+      "required_experience_level": "senior",
+      "experience_level_match": {
+        "meets_requirement": false,
+        "required_range": "7-+ years",
+        "actual_years": 5,
+        "level_match_score": 80
+      }
+    },
+    "education_analysis": {
+      "highest_degree": "Master of Science in Computer Science",
+      "education_count": 2,
+      "degree_level_score": 80
+    },
+    "metadata": {
+      "analysis_timestamp": "2025-07-25T14:27:36.221357",
+      "resume_length": 816,
+      "job_description_length": 789
+    }
+  },
+  "openai_results": {
+    "result": {
+      "overall_score": 82,
+      "confidence_level": "High",
+      "score_breakdown": {
+        "skills_score": 85,
+        "experience_score": 80,
+        "education_score": 100,
+        "domain_score": 80
+      },
+      "match_category": "Good match with minor gaps",
+      "summary": "John Doe presents a strong candidacy for the Senior Full Stack Developer position, demonstrating relevant technical skills and solid experience in web development. While he meets most requirements, there are minor gaps in specific areas such as Kubernetes experience.",
+      "strengths": [
+        "Strong technical skills in Python, JavaScript, and React",
+        "Experience with cloud services (AWS)",
+        "Proven leadership experience managing a team",
+        "Solid educational background with a Master's degree",
+        "Experience with CI/CD pipelines"
+      ],
+      "concerns": [
+        "Lack of experience with Kubernetes",
+        "Limited information on problem-solving and communication skills",
+        "No mention of mentoring junior developers"
+      ],
+      "missing_skills": [
+        "Kubernetes"
+      ],
+      "matching_skills": [
+        "Python",
+        "JavaScript",
+        "React",
+        "AWS",
+        "Docker",
+        "PostgreSQL",
+        "CI/CD"
+      ],
+      "experience_assessment": {
+        "relevant_years": 5,
+        "role_progression": "Demonstrates upward progression from Software Engineer to Senior Software Developer",
+        "industry_fit": "Experience aligns well with web development and software engineering roles"
+      },
+      "recommendations": [
+        "Gain experience with Kubernetes to enhance cloud deployment skills",
+        "Highlight problem-solving and communication skills in future applications",
+        "Include examples of mentoring or leading junior developers"
+      ],
+      "risk_factors": [
+        "Potential lack of experience in a fully cloud-native environment",
+        "Limited exposure to mentoring roles may affect team dynamics"
+      ]
+    },
+    "processing_info": {
+      "model_used": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "processing_timestamp": "2025-07-25T14:27:42.505151",
+      "prompt_tokens": 867,
+      "completion_tokens": 404,
+      "total_tokens": 1271
+    }
+  },
+  "transparency": {
+    "methodology": "OpenAI GPT + Structured Analysis",
+    "processing_time_seconds": 6.28,
+    "timestamp": "2025-07-25T14:27:42.505192",
+    "score_components": {
+      "structured_score": 0,
+      "openai_score": 82,
+      "final_score": 82
+    },
+    "validation": {
+      "openai_available": true,
+      "fallback_used": false
+    }
+  }
+}

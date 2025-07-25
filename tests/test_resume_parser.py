@@ -61,8 +61,11 @@ class TestResumeParser:
         skills = result.get('skills', [])
         
         assert len(skills) > 0
-        # Check for some expected skills
-        skill_names = [skill.get('skill', '').lower() for skill in skills]
+        # Check for some expected skills (handle both string and object formats)
+        if skills and isinstance(skills[0], str):
+            skill_names = [skill.lower() for skill in skills]
+        else:
+            skill_names = [skill.get('skill', '').lower() for skill in skills]
         assert any('python' in skill for skill in skill_names)
     
     def test_experience_extraction(self, parser, sample_resume_text):

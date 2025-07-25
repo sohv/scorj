@@ -1,7 +1,3 @@
-"""
-ResumeRoast Configuration Management
-Centralized configuration for all system components
-"""
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
