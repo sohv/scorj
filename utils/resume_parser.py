@@ -1,4 +1,4 @@
-import PyPDF2
+from pypdf import PdfReader
 from docx import Document
 from typing import Dict, List, Optional
 import re
@@ -20,7 +20,7 @@ class ResumeParser:
 
     def parse_pdf(self, file) -> Dict[str, str]:
         text = ""
-        pdf_reader = PyPDF2.PdfReader(file)
+        pdf_reader = PdfReader(file)
         for page in pdf_reader.pages:
             text += page.extract_text()
         

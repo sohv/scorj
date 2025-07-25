@@ -6,7 +6,7 @@ passlib[bcrypt]
 pydantic
 python-dotenv
 python-docx
-PyPDF2
+pypdf
 docling
 sentence-transformers
 streamlit
