@@ -37,6 +37,12 @@ Unlike traditional resume reviewers that rely on keyword matching or basic templ
 - **Processing Transparency**: Shows analysis time and token usage for trust and debugging
 - **Multiple Formats**: Supports both PDF and DOCX resume formats
 
+### Smart Context Analysis
+- **Structured Comments**: Automatically extracts work preferences, availability, and goals from user input
+- **Bonus Scoring**: Up to 15+ bonus points for relevant context alignment
+- **Preference Matching**: Work location, availability, and experience level matching
+- **Learning Motivation**: Additional points for demonstrated learning goals and career growth mindset
+
 ## Project Structure
 
 ```
