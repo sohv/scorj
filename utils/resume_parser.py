@@ -170,7 +170,6 @@ class ResumeParser:
             return self._extract_skills_regex(text)
 
     def _extract_skills_regex(self, text: str) -> List[str]:
-        """Fallback regex-based skill extraction."""
         skill_patterns = [
             r'(?i)(python|java|javascript|typescript|react|angular|vue|node\.js|express|django|flask|fastapi)',
             r'(?i)(aws|azure|gcp|cloud|docker|kubernetes|terraform)',

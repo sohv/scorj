@@ -12,12 +12,13 @@ from openai import OpenAI
 
 from config import config
 from utils.error_handling import error_handler, ComponentMonitor, ErrorCategory, ErrorSeverity
-from utils.enhanced_skills_matcher import skills_matcher
+from utils.skills_matcher import SkillsProcessor
 
 class JobDescriptionParser:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.model = "gpt-4o-mini"
+        self.skills_processor = SkillsProcessor()  # Initialize our skills processor
         
         parser_config = config.job_parser
         self.user_agents = parser_config.user_agents
@@ -111,8 +112,8 @@ class JobDescriptionParser:
             error_handler.logger.warning("Could not extract job title")
             return False
         
-        if skills_matcher and isinstance(skills, list) and len(skills) == 0:
-            extracted_skills = skills_matcher.extract_skills_from_text(description)
+        if self.skills_processor and isinstance(skills, list) and len(skills) == 0:
+            extracted_skills = self.skills_processor.extract_skills_from_text(description)
             if len(extracted_skills) == 0:
                 error_handler.logger.warning("No technical skills detected in job description")
         
@@ -243,10 +244,10 @@ class JobDescriptionParser:
         return benefits
 
     def extract_skills(self, description: str) -> List[str]:
-        if skills_matcher:
-            taxonomy_skills = skills_matcher.extract_skills_from_text(description)
+        if self.skills_processor:
+            taxonomy_skills = self.skills_processor.extract_skills_from_text(description)
             ai_skills = self._extract_skills_openai(description)
-            all_skills = list(taxonomy_skills.union(set(ai_skills)))
+            all_skills = list(set(taxonomy_skills + ai_skills))  # Combine and deduplicate
             error_handler.logger.info(f"Extracted {len(all_skills)} skills using enhanced matching")
             return all_skills
         else:

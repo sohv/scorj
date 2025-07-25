@@ -38,8 +38,8 @@ class ScoringEngine(BaseScoringEngine):
         job_skills = job_data.get('skills', [])
         
         if job_skills:
-            # Use semantic skills matching from base class
-            skills_match_result = self._semantic_skills_match(resume_skills, job_skills)
+            # Use enhanced skills matching from base class
+            skills_match_result = self._enhanced_skills_match(resume_skills, job_skills)
             analysis['skills_analysis'] = skills_match_result
         
         # Enhanced experience analysis with relevance weighting
