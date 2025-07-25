@@ -8,27 +8,27 @@
     "domain_score": 80
   },
   "match_category": "Good match with minor gaps",
-  "summary": "John Doe is a strong candidate for the Senior Full Stack Developer position, demonstrating relevant experience and a solid educational background. While he meets most technical requirements, there are minor gaps in specific skills related to Kubernetes and advanced cloud services.",
+  "summary": "John Doe presents a strong candidacy for the Senior Full Stack Developer position, demonstrating relevant technical skills and experience. While he meets most requirements, there are minor gaps in specific areas such as Kubernetes experience.",
   "strengths": [
-    "5+ years of relevant experience in web development",
-    "Proficient in required programming languages (Python, JavaScript, React)",
-    "Strong experience with CI/CD pipelines and containerization (Docker)",
-    "Solid educational background with a Master's degree in Computer Science",
-    "Leadership experience in mentoring and team management"
+    "Strong technical skills in Python, JavaScript, and React",
+    "5 years of relevant experience in web development",
+    "Master's degree in Computer Science",
+    "Experience with CI/CD pipelines and cloud services (AWS)",
+    "Leadership experience managing a team of developers"
   ],
   "concerns": [
-    "Lacks experience with Kubernetes, which is preferred for the role",
-    "Limited mention of advanced cloud services beyond AWS",
-    "No explicit examples of problem-solving or communication skills in the resume"
+    "Lack of Kubernetes experience",
+    "No explicit mention of mentoring junior developers",
+    "Limited information on problem-solving and communication skills"
   ],
   "missing_skills": [
-    "Kubernetes",
-    "Advanced cloud services experience"
+    "Kubernetes"
   ],
   "matching_skills": [
     "Python",
     "JavaScript",
     "React",
+    "Node.js",
     "Docker",
     "AWS",
     "PostgreSQL",
@@ -39,17 +39,17 @@
   ],
   "experience_assessment": {
     "relevant_years": 5,
-    "role_progression": "Demonstrates upward progression from Software Engineer to Senior Software Developer",
-    "industry_fit": "Experience aligns well with web development and software engineering roles"
+    "role_progression": "Demonstrates growth from Software Engineer to Senior Software Developer",
+    "industry_fit": "Experience in both corporate and startup environments"
   },
   "recommendations": [
     "Gain experience with Kubernetes to enhance cloud service skills",
-    "Highlight specific problem-solving and communication skills in the resume",
-    "Consider contributing to open-source projects to demonstrate advanced cloud service capabilities"
+    "Highlight mentoring and leadership experiences more explicitly",
+    "Provide examples of problem-solving and communication skills in future applications"
   ],
   "risk_factors": [
-    "Potential lack of experience with Kubernetes may limit adaptability to the team's infrastructure",
-    "Limited evidence of soft skills could impact team dynamics and collaboration"
+    "Potential lack of experience in mentoring junior developers",
+    "Missing Kubernetes knowledge may limit deployment capabilities"
   ],
   "final_score": 85,
   "structured_analysis": {
@@ -74,11 +74,12 @@
       "degree_level_score": 80
     },
     "metadata": {
-      "analysis_timestamp": "2025-07-25T14:53:31.622947",
+      "analysis_timestamp": "2025-07-25T16:06:31.250025",
       "resume_length": 816,
       "job_description_length": 789
     }
   },
+  "structured_comments": {},
   "openai_results": {
     "result": {
       "overall_score": 85,
@@ -90,27 +91,27 @@
         "domain_score": 80
       },
       "match_category": "Good match with minor gaps",
-      "summary": "John Doe is a strong candidate for the Senior Full Stack Developer position, demonstrating relevant experience and a solid educational background. While he meets most technical requirements, there are minor gaps in specific skills related to Kubernetes and advanced cloud services.",
+      "summary": "John Doe presents a strong candidacy for the Senior Full Stack Developer position, demonstrating relevant technical skills and experience. While he meets most requirements, there are minor gaps in specific areas such as Kubernetes experience.",
       "strengths": [
-        "5+ years of relevant experience in web development",
-        "Proficient in required programming languages (Python, JavaScript, React)",
-        "Strong experience with CI/CD pipelines and containerization (Docker)",
-        "Solid educational background with a Master's degree in Computer Science",
-        "Leadership experience in mentoring and team management"
+        "Strong technical skills in Python, JavaScript, and React",
+        "5 years of relevant experience in web development",
+        "Master's degree in Computer Science",
+        "Experience with CI/CD pipelines and cloud services (AWS)",
+        "Leadership experience managing a team of developers"
       ],
       "concerns": [
-        "Lacks experience with Kubernetes, which is preferred for the role",
-        "Limited mention of advanced cloud services beyond AWS",
-        "No explicit examples of problem-solving or communication skills in the resume"
+        "Lack of Kubernetes experience",
+        "No explicit mention of mentoring junior developers",
+        "Limited information on problem-solving and communication skills"
       ],
       "missing_skills": [
-        "Kubernetes",
-        "Advanced cloud services experience"
+        "Kubernetes"
       ],
       "matching_skills": [
         "Python",
         "JavaScript",
         "React",
+        "Node.js",
         "Docker",
         "AWS",
         "PostgreSQL",
@@ -121,40 +122,42 @@
       ],
       "experience_assessment": {
         "relevant_years": 5,
-        "role_progression": "Demonstrates upward progression from Software Engineer to Senior Software Developer",
-        "industry_fit": "Experience aligns well with web development and software engineering roles"
+        "role_progression": "Demonstrates growth from Software Engineer to Senior Software Developer",
+        "industry_fit": "Experience in both corporate and startup environments"
       },
       "recommendations": [
         "Gain experience with Kubernetes to enhance cloud service skills",
-        "Highlight specific problem-solving and communication skills in the resume",
-        "Consider contributing to open-source projects to demonstrate advanced cloud service capabilities"
+        "Highlight mentoring and leadership experiences more explicitly",
+        "Provide examples of problem-solving and communication skills in future applications"
       ],
       "risk_factors": [
-        "Potential lack of experience with Kubernetes may limit adaptability to the team's infrastructure",
-        "Limited evidence of soft skills could impact team dynamics and collaboration"
+        "Potential lack of experience in mentoring junior developers",
+        "Missing Kubernetes knowledge may limit deployment capabilities"
       ]
     },
     "processing_info": {
       "model_used": "gpt-4o-mini",
       "provider": "OpenAI",
-      "processing_timestamp": "2025-07-25T14:53:40.224955",
+      "processing_timestamp": "2025-07-25T16:06:41.743551",
       "prompt_tokens": 867,
-      "completion_tokens": 463,
-      "total_tokens": 1330
+      "completion_tokens": 418,
+      "total_tokens": 1285
     }
   },
   "transparency": {
-    "methodology": "OpenAI GPT + Structured Analysis",
-    "processing_time_seconds": 8.6,
-    "timestamp": "2025-07-25T14:53:40.225008",
+    "methodology": "OpenAI GPT + Structured Analysis + Context Bonuses",
+    "processing_time_seconds": 10.49,
+    "timestamp": "2025-07-25T16:06:41.743605",
     "score_components": {
       "structured_score": 0,
-      "openai_score": 85,
+      "openai_base_score": 85,
+      "context_bonus": 0,
       "final_score": 85
     },
     "validation": {
       "openai_available": true,
-      "fallback_used": false
+      "fallback_used": false,
+      "structured_comments_applied": false
     }
   }
 }

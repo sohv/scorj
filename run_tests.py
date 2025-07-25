@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Test runner script for ResumeRoast project.
-Provides easy commands to run different types of tests.
-"""
 
 import os
 import sys

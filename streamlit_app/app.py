@@ -108,12 +108,38 @@ else:
 
 # User comments section
 st.write("### Additional Context")
-st.write("**Provide additional information about your situation to get a more accurate score:**")
+st.write("**Share your intentions and motivations to get personalized bonus points:**")
+
+# Create expandable sections for guidance
+with st.expander("How AI analyzes your intentions"):
+    st.markdown("""
+    **Our AI understands the meaning behind your words, not just keywords:**
+    
+    **Work Style Preferences:** 
+    - "I thrive in collaborative office environments" → onsite preference
+    - "I'm most productive working from home" → remote preference
+    
+    **Availability & Motivation:**
+    - "I'm excited to start immediately" → high urgency score
+    - "Looking to grow my career in AI" → learning motivation bonus
+    
+    **Professional Confidence:**
+    - "I have extensive experience leading teams" → confidence boost
+    - "Eager to relocate for the right opportunity" → flexibility bonus
+    
+    **The AI focuses on genuine intent and passion rather than keyword matching.**
+    """)
+
 user_comments = st.text_area(
-    "Add comments about your availability, preferences, or any other relevant context:",
-    height=100,
-    placeholder="Example: I am available to work on-site in Bengaluru, willing to relocate, have 6 months availability for internship, passionate about learning AI/ML, etc.",
-    help="This information will be considered when evaluating your fit for the role, especially for requirements not directly mentioned in your resume."
+    "Describe your motivations, preferences, and career goals:",
+    height=120,
+    placeholder="""Examples of meaningful context:
+• I'm passionate about machine learning and excited to contribute to AI innovation
+• I thrive in remote environments and have a proven track record of self-management  
+• Ready to start immediately and looking to grow my technical leadership skills
+• Willing to relocate to San Francisco for the right growth opportunity
+• I love collaborative problem-solving and mentoring junior developers""",
+    help="Our AI analyzes the genuine intent and motivation in your words to provide context-aware bonus points (up to 15+ points possible)."
 )
 
 # Initialize session state for scoring results
@@ -133,11 +159,38 @@ if st.session_state.scoring_result:
     st.write("---")
     st.subheader("AI Resume Analysis Results")
     
-    # Show if user comments were included
+    # Get feedback from result
     feedback = result.get('feedback', {})
     structured_analysis = feedback.get('structured_analysis', {})
+    
+    # Show intent analysis if available
+    structured_comments = feedback.get('structured_comments', {})
     if user_comments and user_comments.strip():
-        st.info("**User comments were included in the analysis:** " + user_comments.strip()[:100] + ("..." if len(user_comments.strip()) > 100 else ""))
+        st.write("### Intent Analysis")
+        
+        if structured_comments:
+            intent_analysis = structured_comments.get('intent_analysis', {})
+            structured_feedback = structured_comments.get('structured_feedback', '')
+            context_bonus = structured_comments.get('total_bonus', 0)
+            
+            if structured_feedback and structured_feedback != "No context provided":
+                st.info(f"**AI-Detected Intentions:** {structured_feedback}")
+            
+            if context_bonus > 0:
+                st.success(f"**Intent Bonus Applied:** +{context_bonus:.1f} points for genuine motivations and alignment")
+                
+                # Show breakdown if available
+                adjustments = structured_comments.get('scoring_adjustments', {})
+                if adjustments:
+                    with st.expander("See bonus breakdown"):
+                        for adj_type, value in adjustments.items():
+                            if value > 0:
+                                adj_name = adj_type.replace('_', ' ').title()
+                                st.write(f"• {adj_name}: +{value:.1f} points")
+            else:
+                st.info("**Intent processed** - consider expressing stronger preferences or motivations for bonus points")
+        else:
+            st.info("**User context included:** " + user_comments.strip()[:100] + ("..." if len(user_comments.strip()) > 100 else ""))
     
     # Extract scores from analysis
     final_score = feedback.get('final_score', result.get('score', 0))

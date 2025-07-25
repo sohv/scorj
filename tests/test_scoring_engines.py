@@ -1,6 +1,3 @@
-"""
-Unit tests for scoring engines.
-"""
 import pytest
 import os
 import sys

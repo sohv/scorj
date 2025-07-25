@@ -1,6 +1,3 @@
-"""
-Unit tests for job parsing functionality.
-"""
 import pytest
 import os
 import sys

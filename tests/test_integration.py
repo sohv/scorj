@@ -1,6 +1,3 @@
-"""
-Integration tests for the complete resume scoring workflow.
-"""
 import pytest
 import os
 import sys

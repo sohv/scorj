@@ -1,6 +1,3 @@
-"""
-Unit tests for resume parsing functionality.
-"""
 import pytest
 import os
 import sys
