@@ -214,7 +214,10 @@ class BaseScoringEngine:
             structured_feedback = structured_comments_data.get('structured_feedback', '')
             total_bonus = structured_comments_data.get('total_bonus', 0)
             
-            user_comments_section = f"""
+            # IMPORTANT: Only include comments in AI prompt if they provide positive bonus
+            # This prevents misaligned comments from negatively influencing the base score
+            if total_bonus > 0:
+                user_comments_section = f"""
 
 **CANDIDATE CONTEXT:**
 Applying to {job_title} at {company_name}. 
@@ -222,6 +225,9 @@ Structured Profile: {structured_feedback}
 Scoring Bonus Applied: +{total_bonus:.1f} points
 Original Comments: "{user_comments}"
 """
+            else:
+                # Don't include misaligned comments in the prompt to avoid negative influence
+                user_comments_section = ""
         
         base_prompt = f"""
 You are a senior technical recruiter with 15+ years of experience. Analyze this resume against the job requirements and provide comprehensive scoring.

@@ -35,7 +35,7 @@ class ScoringEngine(BaseScoringEngine):
         
         # Enhanced skills analysis with semantic matching
         resume_skills = resume_data.get('skills', [])
-        job_skills = job_data.get('skills', [])
+        job_skills = job_data.get('skills', []) or job_data.get('required_skills', [])
         
         if job_skills:
             # Use enhanced skills matching from base class
