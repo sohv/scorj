@@ -54,11 +54,10 @@ def test_backend_connection():
         print(f"Cannot connect to backend server at {API_URL}: {e}")
         return False
 
-def chat_with_ai(question: str, model: str = "openai", context: str = None):
+def chat_with_ai(question: str, context: str = None):
     try:
         data = {
-            "question": question,
-            "model": model
+            "question": question
         }
         if context:
             data["context"] = context
@@ -132,7 +131,7 @@ if st.button("Score Resume", disabled=not (resume_file and (job_url or job_descr
 if st.session_state.scoring_result:
     result = st.session_state.scoring_result
     st.write("---")
-    st.subheader("Dual AI Analysis Results")
+    st.subheader("AI Resume Analysis Results")
     
     # Show if user comments were included
     feedback = result.get('feedback', {})
@@ -140,42 +139,16 @@ if st.session_state.scoring_result:
     if user_comments and user_comments.strip():
         st.info("💬 **User comments were included in the analysis:** " + user_comments.strip()[:100] + ("..." if len(user_comments.strip()) > 100 else ""))
     
-    # Extract scores from dual model analysis
+    # Extract scores from analysis
     final_score = feedback.get('final_score', result.get('score', 0))
-    ai_comparison = feedback.get('ai_comparison', {})
-    dual_model_results = feedback.get('dual_model_results', {})
     
-    # Display final combined score with color coding
+    # Display final score with color coding
     if final_score >= 80:
         st.success(f"Excellent Match: {final_score}/100")
     elif final_score >= 60:
         st.warning(f"Good Match: {final_score}/100")
     else:
         st.error(f"Needs Improvement: {final_score}/100")
-    
-    # Display AI model comparison
-    if ai_comparison:
-        st.write("### AI Model Comparison")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            openai_score = ai_comparison.get('openai_score', 0)
-            st.metric("OpenAI Score", f"{openai_score}/100", 
-                     delta=f"{openai_score - final_score:+}" if openai_score > 0 else None)
-        
-        with col2:
-            gemini_score = ai_comparison.get('gemini_score', 0)
-            st.metric("Gemini Score", f"{gemini_score}/100",
-                     delta=f"{gemini_score - final_score:+}" if gemini_score > 0 else None)
-        
-        with col3:
-            consensus_level = ai_comparison.get('consensus_level', 'Unknown')
-            score_variance = ai_comparison.get('score_variance')
-            if score_variance is not None:
-                st.metric("Model Agreement", consensus_level, 
-                         delta=f"±{score_variance} pts" if score_variance > 0 else "Perfect match")
-            else:
-                st.metric("Model Agreement", consensus_level)
     
     # Display job info
     st.write("### Job Information")
@@ -199,12 +172,8 @@ if st.session_state.scoring_result:
             st.info(f"**Processing Time:** {processing_time:.2f} seconds")
         
         with col2:
-            validation = transparency.get('validation', {})
-            both_models = validation.get('both_models_available', False)
-            st.info(f"**Both AI Models Available:** {'Yes' if both_models else 'No'}")
-            
-            fallback_used = validation.get('fallback_used', False)
-            st.info(f"**Fallback Used:** {'Yes' if fallback_used else 'No'}")
+            st.info(f"**AI Model:** OpenAI GPT-4o-mini")
+            st.info(f"**Analysis Quality:** High Precision")
     
     # Display detailed feedback
     st.write("### Detailed Analysis")
@@ -281,12 +250,9 @@ if st.session_state.scoring_result:
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
         
-        # AI model selection for chat
-        chat_model = st.selectbox(
-            "Choose AI model for chat:",
-            ["openai", "gemini"],
-            format_func=lambda x: "OpenAI GPT-4o-mini" if x == "openai" else "Google Gemini 2.0-flash"
-        )
+        # Using OpenAI for chat
+        chat_model = "openai"
+        st.info("💬 **AI Chat**")
         
         # Create scoring context for AI
         scoring_context = f"""
