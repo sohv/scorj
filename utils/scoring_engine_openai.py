@@ -129,8 +129,23 @@ class ScoringEngine(BaseScoringEngine):
                 openai_result = self._create_error_response(str(e))
                 processing_info = {'error': True, 'provider': 'OpenAI'}
             
-            # Phase 3: Final Score Calculation
-            final_score = openai_result.get('overall_score', 0)
+            # Phase 3: Final Score Calculation with Structured Comments Bonus
+            base_score = openai_result.get('overall_score', 0)
+            
+            # Process structured comments and apply bonus
+            user_comments = resume_data.get('user_comments', '')
+            structured_bonus = 0
+            structured_comments_data = {}
+            
+            if user_comments:
+                from .structured_comments import process_user_comments
+                structured_comments_data = process_user_comments(user_comments, job_data)
+                structured_bonus = structured_comments_data.get('total_bonus', 0)
+            
+            # Apply bonus with cap at 100
+            final_score = min(100, base_score + structured_bonus)
+            
+            logger.info(f"Score calculation: Base={base_score}, Bonus={structured_bonus}, Final={final_score}")
             
             # Phase 4: Create Comprehensive Response
             processing_time = (datetime.now() - start_time).total_seconds()
@@ -139,22 +154,25 @@ class ScoringEngine(BaseScoringEngine):
                 **openai_result,
                 'final_score': final_score,
                 'structured_analysis': structured_analysis,
+                'structured_comments': structured_comments_data,
                 'openai_results': {
                     'result': openai_result,
                     'processing_info': processing_info
                 },
                 'transparency': {
-                    'methodology': 'OpenAI GPT + Structured Analysis',
+                    'methodology': 'OpenAI GPT + Structured Analysis + Context Bonuses',
                     'processing_time_seconds': round(processing_time, 2),
                     'timestamp': datetime.now().isoformat(),
                     'score_components': {
                         'structured_score': structured_analysis.get('structured_score', 0),
-                        'openai_score': openai_result.get('overall_score', 0) if not openai_result.get('error_occurred') else 0,
+                        'openai_base_score': openai_result.get('overall_score', 0) if not openai_result.get('error_occurred') else 0,
+                        'context_bonus': structured_bonus,
                         'final_score': final_score
                     },
                     'validation': {
                         'openai_available': not openai_result.get('error_occurred', False),
-                        'fallback_used': openai_result.get('error_occurred', False)
+                        'fallback_used': openai_result.get('error_occurred', False),
+                        'structured_comments_applied': bool(user_comments and structured_bonus > 0)
                     }
                 }
             }

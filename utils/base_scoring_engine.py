@@ -1,11 +1,9 @@
-"""
-Base scoring engine with common functionality shared across all scoring engines.
-"""
 from typing import Dict, Any, List
 from datetime import datetime
 import logging
 
 from .skills_matcher import SkillsProcessor
+from .structured_comments import process_user_comments
 
 # set up logging
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +12,6 @@ logger = logging.getLogger(__name__)
 class BaseScoringEngine:
     
     def __init__(self):
-        # Fixed scoring weights across all roles
         self.weights = {
             'skills_match': 0.35,
             'experience_match': 0.30,
@@ -204,14 +201,26 @@ class BaseScoringEngine:
         # Check for user comments with enhanced contextual integration
         user_comments = resume_data.get('user_comments', '')
         user_comments_section = ""
+        structured_comments_data = {}
         
         if user_comments:
+            # Process structured comments
+            structured_comments_data = process_user_comments(user_comments, job_data)
+            
             # Extract company name from job data if available
             company_name = job_data.get('company', 'the company')
+            
+            # Create enhanced section with structured feedback
+            structured_feedback = structured_comments_data.get('structured_feedback', '')
+            total_bonus = structured_comments_data.get('total_bonus', 0)
+            
             user_comments_section = f"""
 
 **CANDIDATE CONTEXT:**
-Applying to {job_title} at {company_name}. Additional context: "{user_comments}"
+Applying to {job_title} at {company_name}. 
+Structured Profile: {structured_feedback}
+Scoring Bonus Applied: +{total_bonus:.1f} points
+Original Comments: "{user_comments}"
 """
         
         base_prompt = f"""

@@ -1,7 +1,3 @@
-"""
-Enhanced Error Handling and Monitoring System
-Provides comprehensive error tracking, logging, and system health monitoring
-"""
 import logging
 import traceback
 import time
