@@ -8,10 +8,7 @@ python-dotenv
 python-docx
 PyPDF2
 docling
-google-generativeai
 sentence-transformers
-numpy
-scikit-learn
 streamlit
 gradio
 motor

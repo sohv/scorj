@@ -137,7 +137,7 @@ if st.session_state.scoring_result:
     feedback = result.get('feedback', {})
     structured_analysis = feedback.get('structured_analysis', {})
     if user_comments and user_comments.strip():
-        st.info("💬 **User comments were included in the analysis:** " + user_comments.strip()[:100] + ("..." if len(user_comments.strip()) > 100 else ""))
+        st.info("**User comments were included in the analysis:** " + user_comments.strip()[:100] + ("..." if len(user_comments.strip()) > 100 else ""))
     
     # Extract scores from analysis
     final_score = feedback.get('final_score', result.get('score', 0))
@@ -252,7 +252,7 @@ if st.session_state.scoring_result:
         
         # Using OpenAI for chat
         chat_model = "openai"
-        st.info("💬 **AI Chat**")
+        st.info("**AI Chat**")
         
         # Create scoring context for AI
         scoring_context = f"""

@@ -14,16 +14,13 @@ from utils.job_parser import JobDescriptionParser
 
 
 class TestJobParser:
-    """Test cases for JobDescriptionParser class."""
     
     @pytest.fixture
     def parser(self):
-        """Create a JobDescriptionParser instance for testing."""
         return JobDescriptionParser()
     
     @pytest.fixture
     def sample_job_description(self):
-        """Sample job description for testing."""
         return """
         Senior Full Stack Developer
         
@@ -46,12 +43,10 @@ class TestJobParser:
         """
     
     def test_parser_initialization(self, parser):
-        """Test that parser initializes correctly."""
         assert parser is not None
         assert hasattr(parser, 'parse_job_description_text')
     
     def test_parse_job_description_basic(self, parser, sample_job_description):
-        """Test basic job description parsing."""
         result = parser.parse_job_description_text(sample_job_description)
         
         assert result is not None
@@ -61,7 +56,6 @@ class TestJobParser:
         assert 'experience_level' in result
     
     def test_skills_extraction(self, parser, sample_job_description):
-        """Test that required skills are extracted correctly."""
         result = parser.parse_job_description_text(sample_job_description)
         skills = result.get('required_skills', [])
         
@@ -72,21 +66,18 @@ class TestJobParser:
         assert any('javascript' in skill for skill in skill_names)
     
     def test_title_extraction(self, parser, sample_job_description):
-        """Test that job title is extracted correctly."""
         result = parser.parse_job_description_text(sample_job_description)
         title = result.get('title', '')
         
         assert 'Senior Full Stack Developer' in title
     
     def test_company_extraction(self, parser, sample_job_description):
-        """Test that company name is extracted correctly."""
         result = parser.parse_job_description_text(sample_job_description)
         company = result.get('company', '')
         
         assert 'TechCorp' in company
     
     def test_experience_level_extraction(self, parser, sample_job_description):
-        """Test that experience level is identified."""
         result = parser.parse_job_description_text(sample_job_description)
         experience_level = result.get('experience_level', '')
         
