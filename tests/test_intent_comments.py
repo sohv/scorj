@@ -5,7 +5,8 @@ from utils.structured_comments import (
     GPTIntentAnalyzer, 
     IntentAnalysis,
     calculate_intent_bonuses,
-    generate_intent_feedback
+    generate_intent_feedback,
+    validate_comment_alignment
 )
 
 def test_empty_comments():
@@ -142,6 +143,95 @@ def test_process_user_comments_integration(mock_openai):
     assert 'intent_analysis' in result
     assert 'scoring_adjustments' in result
     assert 'structured_feedback' in result
+
+def test_comment_alignment_validation():
+    """Test that misaligned comments don't get bonus points"""
+    # Remote job, but candidate wants onsite - should be misaligned
+    analysis_remote_job_onsite_pref = IntentAnalysis(
+        work_preference_strength=0.8,
+        work_preference_type="onsite"
+    )
+    job_data_remote = {'description': 'This is a fully remote position working from home'}
+    
+    # Should return False for misalignment
+    assert validate_comment_alignment(analysis_remote_job_onsite_pref, job_data_remote) == False
+    
+    # Should get no bonus points due to misalignment
+    bonuses = calculate_intent_bonuses(analysis_remote_job_onsite_pref, job_data_remote)
+    assert bonuses == {}
+    
+    # Onsite job, but candidate wants remote - should be misaligned
+    analysis_onsite_job_remote_pref = IntentAnalysis(
+        work_preference_strength=0.8,
+        work_preference_type="remote"
+    )
+    job_data_onsite = {'description': 'This position requires working in our office onsite'}
+    
+    # Should return False for misalignment
+    assert validate_comment_alignment(analysis_onsite_job_remote_pref, job_data_onsite) == False
+    
+    # Should get no bonus points due to misalignment
+    bonuses = calculate_intent_bonuses(analysis_onsite_job_remote_pref, job_data_onsite)
+    assert bonuses == {}
+
+def test_availability_alignment_validation():
+    """Test availability timeline alignment"""
+    # Urgent job, but candidate needs months - should be misaligned
+    analysis_slow_start = IntentAnalysis(
+        availability_urgency=0.8,
+        availability_timeline="months"
+    )
+    job_data_urgent = {'description': 'Urgent position needs immediate start ASAP'}
+    
+    assert validate_comment_alignment(analysis_slow_start, job_data_urgent) == False
+    bonuses = calculate_intent_bonuses(analysis_slow_start, job_data_urgent)
+    assert bonuses == {}
+
+def test_experience_level_alignment():
+    """Test experience level alignment"""
+    # Senior job, but candidate lacks confidence - should be misaligned
+    analysis_low_confidence = IntentAnalysis(
+        experience_confidence=0.5  # Below 0.7 threshold for senior roles
+    )
+    job_data_senior = {'description': 'Senior developer position requiring expert-level skills'}
+    
+    assert validate_comment_alignment(analysis_low_confidence, job_data_senior) == False
+    
+    # Entry-level job, but candidate is overconfident - should be misaligned
+    analysis_overconfident = IntentAnalysis(
+        experience_confidence=0.95  # Very high confidence for entry-level
+    )
+    job_data_entry = {'description': 'Entry level junior developer position for recent graduates'}
+    
+    assert validate_comment_alignment(analysis_overconfident, job_data_entry) == False
+
+def test_learning_requirements_alignment():
+    """Test learning vs required skills alignment"""
+    # Job requires Python, but user wants to learn Python (suggests they don't know it) - misaligned
+    analysis_wants_to_learn_required = IntentAnalysis(
+        learning_motivation=0.8,
+        learning_areas=["Python"]
+    )
+    job_data_requires_python = {'description': 'Required Python expertise and must have Python experience'}
+    
+    assert validate_comment_alignment(analysis_wants_to_learn_required, job_data_requires_python) == False
+
+def test_comment_alignment_success():
+    """Test that aligned comments do get bonus points"""
+    # Remote job, candidate wants remote - should be aligned
+    analysis_aligned = IntentAnalysis(
+        work_preference_strength=0.8,
+        work_preference_type="remote"
+    )
+    job_data_remote = {'description': 'This is a fully remote position working from home'}
+    
+    # Should return True for alignment
+    assert validate_comment_alignment(analysis_aligned, job_data_remote) == True
+    
+    # Should get bonus points due to alignment
+    bonuses = calculate_intent_bonuses(analysis_aligned, job_data_remote)
+    assert 'work_preference' in bonuses
+    assert bonuses['work_preference'] > 0
 
 if __name__ == "__main__":
     pytest.main([__file__])

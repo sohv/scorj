@@ -99,10 +99,78 @@ Focus on genuine intent and passion, not just keyword mentions."""
             additional_strengths=response.get('additional_strengths', [])
         )
 
+def validate_comment_alignment(analysis: IntentAnalysis, job_data: Dict[str, Any]) -> bool:
+    """Pre-validate if user comments align with job requirements before scoring"""
+    job_desc = job_data.get('description', '').lower()
+    job_title = job_data.get('title', '').lower()
+    job_text = f"{job_desc} {job_title}"
+    
+    # Check work preference alignment
+    if analysis.work_preference_strength > 0.5:
+        pref_type = analysis.work_preference_type.lower()
+        
+        # If job mentions remote but user wants onsite - misaligned
+        if 'remote' in job_text and pref_type in ['onsite', 'office', 'in-person']:
+            return False
+            
+        # If job mentions onsite/office but user wants remote - misaligned  
+        if any(word in job_text for word in ['office', 'onsite', 'on-site', 'in-person']) and pref_type == 'remote':
+            return False
+    
+    # Check availability timeline alignment
+    if analysis.availability_urgency > 0.5:
+        timeline = analysis.availability_timeline.lower()
+        
+        # If job needs immediate start but user needs months - misaligned
+        if any(word in job_text for word in ['urgent', 'immediate', 'asap', 'start immediately']) and timeline in ['month', 'months', 'later']:
+            return False
+        
+        # If job mentions future start but user wants immediate - potentially misaligned
+        if any(word in job_text for word in ['start in', 'begin in', 'starting']) and timeline == 'immediate':
+            # This is less strict - immediate availability is usually good
+            pass
+    
+    # Check learning/skills alignment
+    if analysis.learning_motivation > 0.5 and analysis.learning_areas:
+        user_areas = [area.lower() for area in analysis.learning_areas]
+        
+        # Check if user wants to learn technologies that conflict with job requirements
+        # For example, if job requires Python expertise but user wants to learn Python (suggests they don't know it)
+        required_skills = []
+        if 'required' in job_text or 'must have' in job_text:
+            # Extract skills mentioned as required
+            for area in user_areas:
+                if f"required {area}" in job_text or f"must have {area}" in job_text:
+                    # User wants to learn something that's required (red flag)
+                    return False
+    
+    # Check relocation/location alignment  
+    if analysis.relocation_flexibility > 0.5:
+        # If job explicitly states "no relocation" or "local only" but user mentions relocation
+        if any(phrase in job_text for phrase in ['no relocation', 'local only', 'must be local', 'local candidates only']):
+            return False
+    
+    # Check experience confidence alignment
+    if analysis.experience_confidence > 0:  # Any expressed confidence level
+        # If job requires senior/expert level but user seems uncertain about their experience
+        if any(word in job_text for word in ['senior', 'expert', 'lead', 'principal']) and analysis.experience_confidence < 0.7:
+            return False
+        
+        # If job is entry-level but user is overconfident
+        if any(word in job_text for word in ['entry level', 'junior', 'graduate', 'intern']) and analysis.experience_confidence > 0.9:
+            return False
+    
+    # If we get here, either no strong preferences stated or preferences align
+    return True
+
 def calculate_intent_bonuses(analysis: IntentAnalysis, job_data: Dict[str, Any]) -> Dict[str, float]:
     bonuses = {}
     
-    # Work preference alignment (max 5 points)
+    # First validate alignment - if misaligned, return empty bonuses
+    if not validate_comment_alignment(analysis, job_data):
+        return bonuses
+    
+    # Work preference alignment (max 5 points) - only award if aligned
     if analysis.work_preference_strength > 0.5:
         job_desc = job_data.get('description', '').lower()
         pref_type = analysis.work_preference_type.lower()
@@ -110,12 +178,13 @@ def calculate_intent_bonuses(analysis: IntentAnalysis, job_data: Dict[str, Any])
         alignment_score = 0
         if pref_type == 'remote' and 'remote' in job_desc:
             alignment_score = 1.0
-        elif pref_type == 'onsite' and any(word in job_desc for word in ['office', 'onsite', 'on-site']):
+        elif pref_type in ['onsite', 'office'] and any(word in job_desc for word in ['office', 'onsite', 'on-site']):
             alignment_score = 1.0
         elif pref_type in ['hybrid', 'flexible']:
             alignment_score = 0.7
         
-        bonuses['work_preference'] = analysis.work_preference_strength * alignment_score * 5
+        if alignment_score > 0:
+            bonuses['work_preference'] = analysis.work_preference_strength * alignment_score * 5
     
     # Availability urgency (max 4 points)
     if analysis.availability_urgency > 0.5:
