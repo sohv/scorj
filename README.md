@@ -11,38 +11,6 @@ A resume scoring and analysis tool that evaluates resumes against job descriptio
 - Web interface via Streamlit
 - REST API backend with FastAPI
 
-## What Makes ResumeRoast Different
-
-Unlike traditional resume reviewers that rely on keyword matching or basic templates, ResumeRoast offers several unique advantages:
-
-### Advanced AI Analysis
-- **Contextual Understanding**: Uses OpenAI GPT-4o-mini for deep content analysis beyond simple keyword matching
-- **Job-Specific Evaluation**: Scores resumes specifically against provided job descriptions rather than generic criteria
-- **Qualitative Assessment**: Evaluates writing quality, achievement presentation, and cultural fit indicators
-
-### Hybrid Scoring Approach
-- **Structured + AI Evaluation**: Combines rule-based scoring with AI insights for balanced assessment
-- **Transparent Methodology**: Clear breakdown of scoring weights and confidence levels
-- **Fuzzy Skills Matching**: 75% similarity threshold catches skill variations (e.g., "JavaScript" matches "JS")
-
-### Technical Architecture
-- **Open Source**: Full transparency with customizable scoring logic
-- **API-First Design**: REST API backend enables integration with other tools
-- **Modern Stack**: FastAPI backend with Streamlit frontend for performance and usability
-- **Comprehensive Testing**: 28 test cases ensure reliability and accuracy
-
-### User-Centric Features
-- **Actionable Feedback**: Specific recommendations for improvement rather than just scores
-- **Skills Gap Analysis**: Identifies missing skills with suggestions for development
-- **Processing Transparency**: Shows analysis time and token usage for trust and debugging
-- **Multiple Formats**: Supports both PDF and DOCX resume formats
-
-### Smart Context Analysis
-- **Structured Comments**: Automatically extracts work preferences, availability, and goals from user input
-- **Bonus Scoring**: Up to 15+ bonus points for relevant context alignment
-- **Preference Matching**: Work location, availability, and experience level matching
-- **Learning Motivation**: Additional points for demonstrated learning goals and career growth mindset
-
 ## Project Structure
 
 ```
@@ -137,6 +105,12 @@ Available test commands:
    - Strengths and areas for improvement
    - Actionable recommendations
 
+## Demo
+
+Below is a demo of ResumeRoast in action:
+
+![ResumeRoast Demo](/media/resumeroast.mp4)
+
 ## Scoring Methodology
 
 The scoring system uses a hybrid approach combining structured analysis with AI evaluation:
@@ -161,6 +135,38 @@ The scoring system uses a hybrid approach combining structured analysis with AI 
 - Results include confidence level and detailed breakdown
 - Recommendations provided for skill gaps and improvements
 - Transparency metrics show processing time and token usage
+
+## What Makes ResumeRoast Different
+
+Unlike traditional resume reviewers that rely on keyword matching or basic templates, ResumeRoast offers several unique advantages:
+
+### Advanced AI Analysis
+- **Contextual Understanding**: Uses OpenAI GPT-4o-mini for deep content analysis beyond simple keyword matching
+- **Job-Specific Evaluation**: Scores resumes specifically against provided job descriptions rather than generic criteria
+- **Qualitative Assessment**: Evaluates writing quality, achievement presentation, and cultural fit indicators
+
+### Hybrid Scoring Approach
+- **Structured + AI Evaluation**: Combines rule-based scoring with AI insights for balanced assessment
+- **Transparent Methodology**: Clear breakdown of scoring weights and confidence levels
+- **Fuzzy Skills Matching**: 75% similarity threshold catches skill variations (e.g., "JavaScript" matches "JS")
+
+### Technical Architecture
+- **Open Source**: Full transparency with customizable scoring logic
+- **API-First Design**: REST API backend enables integration with other tools
+- **Modern Stack**: FastAPI backend with Streamlit frontend for performance and usability
+- **Comprehensive Testing**: 28 test cases ensure reliability and accuracy
+
+### User-Centric Features
+- **Actionable Feedback**: Specific recommendations for improvement rather than just scores
+- **Skills Gap Analysis**: Identifies missing skills with suggestions for development
+- **Processing Transparency**: Shows analysis time and token usage for trust and debugging
+- **Multiple Formats**: Supports both PDF and DOCX resume formats
+
+### Smart Context Analysis
+- **Structured Comments**: Automatically extracts work preferences, availability, and goals from user input
+- **Bonus Scoring**: Up to 15+ bonus points for relevant context alignment
+- **Preference Matching**: Work location, availability, and experience level matching
+- **Learning Motivation**: Additional points for demonstrated learning goals and career growth mindset
 
 ## Requirements
 
