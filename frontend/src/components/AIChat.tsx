@@ -36,7 +36,7 @@ const AIChat: React.FC<AIChatProps> = ({ apiBaseUrl, context }) => {
 
   return (
     <div className="ai-chat-container">
-      <h3>🤖 AI Chat Assistant</h3>
+      <h3>AI Chat Assistant</h3>
       <div className="chat-history">
         {messages.map((msg, idx) => (
           <div key={idx} className={`chat-message ${msg.role}`}>

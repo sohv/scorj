@@ -74,8 +74,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>🎯 Resume Roast</h1>
-        <p>AI-Powered Resume Analysis & Job Matching</p>
+        <h1>ResumeRoast</h1>
+        <p>Analyze your resume against LinkedIn jobs</p>
       </header>
 
       <main className="App-main">
@@ -111,7 +111,7 @@ function App() {
 
         {error && (
           <div className="error-message">
-            <h3>⚠️ Error</h3>
+            <h3>Error</h3>
             <p>{error}</p>
           </div>
         )}

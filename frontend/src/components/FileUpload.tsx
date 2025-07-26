@@ -30,7 +30,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ resumeFile, onFileSelect }) => 
 
   return (
     <div className="file-upload-section">
-      <h2>📄 Upload Your Resume</h2>
+      <h2>Upload Your Resume</h2>
       
       {!resumeFile ? (
         <div 

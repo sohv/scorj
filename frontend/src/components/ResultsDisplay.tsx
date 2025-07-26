@@ -71,31 +71,49 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result }) => {
         </div>
       )}
 
-      {/* Strengths */}
-      {result.strengths && result.strengths.length > 0 && (
-        <div className="strengths-section">
-          <h3>Strengths</h3>
-          <ul className="strengths-list">
-            {result.strengths.slice(0, 5).map((strength, index) => (
-              <li key={index} className="strength-item">
-                {strength}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Areas for Improvement */}
-      {result.concerns && result.concerns.length > 0 && (
-        <div className="concerns-section">
-          <h3>Areas for Improvement</h3>
-          <ul className="concerns-list">
-            {result.concerns.slice(0, 5).map((concern, index) => (
-              <li key={index} className="concern-item">
-                {concern}
-              </li>
-            ))}
-          </ul>
+      {/* Strengths and Concerns Table */}
+      {((result.strengths && result.strengths.length > 0) || (result.concerns && result.concerns.length > 0)) && (
+        <div className="analysis-table-section">
+          <h3>Analysis Overview</h3>
+          <div className="analysis-table-container">
+            <table className="analysis-table">
+              <thead>
+                <tr>
+                  <th className="strengths-header">
+                    <CheckCircle size={20} />
+                    Strengths
+                  </th>
+                  <th className="concerns-header">
+                    <AlertCircle size={20} />
+                    Areas for Improvement
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: Math.max(
+                  result.strengths?.length || 0, 
+                  result.concerns?.length || 0
+                ) }).map((_, index) => (
+                  <tr key={index}>
+                    <td className="strength-cell">
+                      {result.strengths?.[index] && (
+                        <div className="table-item strength-item">
+                          {result.strengths[index]}
+                        </div>
+                      )}
+                    </td>
+                    <td className="concern-cell">
+                      {result.concerns?.[index] && (
+                        <div className="table-item concern-item">
+                          {result.concerns[index]}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -191,12 +209,28 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result }) => {
             {result.feedback.experience_score !== undefined && (
               <div><strong>Experience Score:</strong> {result.feedback.experience_score}/100</div>
             )}
-            {/* Show any other fields in feedback as JSON for debugging */}
-            {Object.keys(result.feedback).filter(k => !['summary','strengths','concerns','matching_skills','missing_skills'].includes(k)).length > 0 && (
-              <details>
-                <summary>Other Details (debug)</summary>
-                <pre>{JSON.stringify(Object.fromEntries(Object.entries(result.feedback).filter(([k]) => !['summary','strengths','concerns','matching_skills','missing_skills'].includes(k))), null, 2)}</pre>
-              </details>
+            {/* Additional feedback details in a structured format */}
+            {result.feedback.detailed_breakdown && (
+              <div className="detailed-breakdown">
+                <h4>Detailed Breakdown</h4>
+                <div className="breakdown-content">
+                  {Object.entries(result.feedback.detailed_breakdown).map(([key, value]) => (
+                    <div key={key} className="breakdown-item">
+                      <strong>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> {value as string}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {result.feedback.recommendations && result.feedback.recommendations.length > 0 && (
+              <div className="recommendations">
+                <h4>Recommendations</h4>
+                <ul className="recommendations-list">
+                  {result.feedback.recommendations.map((rec: string, index: number) => (
+                    <li key={index} className="recommendation-item">{rec}</li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </div>
