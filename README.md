@@ -109,7 +109,7 @@ Available test commands:
 
 Below is a demo of ResumeRoast in action:
 
-![ResumeRoast Demo](/media/resumeroast.mp4)
+![ResumeRoast Demo](media/resumeroast.mp4)
 
 ## Scoring Methodology
 
