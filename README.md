@@ -105,12 +105,6 @@ Available test commands:
    - Strengths and areas for improvement
    - Actionable recommendations
 
-## Demo
-
-Below is a demo of ResumeRoast in action:
-
-![ResumeRoast Demo](media/resumeroast.mp4)
-
 ## Scoring Methodology
 
 The scoring system uses a hybrid approach combining structured analysis with AI evaluation:
