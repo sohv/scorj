@@ -69,8 +69,19 @@ class SkillsProcessor:
             for alias in aliases:
                 self.normalized_skills[alias.lower()] = canonical
     
-    def normalize_skill(self, skill: str) -> str:
-        skill_clean = re.sub(r'[^\w\s+#]', '', skill.lower().strip())
+    def extract_skill_string(self, skill) -> str:
+        """
+        Extract skill string from various formats (string, dict with 'skill' key)
+        """
+        if isinstance(skill, dict):
+            return skill.get('skill', '')
+        return str(skill)
+    
+    def normalize_skill(self, skill) -> str:
+        # Handle both string and dict formats using helper method
+        skill_str = self.extract_skill_string(skill)
+            
+        skill_clean = re.sub(r'[^\w\s+#]', '', skill_str.lower().strip())
         skill_clean = re.sub(r'\s+', ' ', skill_clean)
         
         # Check direct mapping
@@ -102,9 +113,10 @@ class SkillsProcessor:
         
         return similarity
     
-    def match_skills(self, resume_skills: List[str], job_skills: List[str]) -> Dict[str, Any]:
+    def match_skills(self, resume_skills, job_skills) -> Dict[str, Any]:
         """
         Enhanced skills matching with fuzzy matching and normalization
+        Handles both string lists and dict lists (with 'skill' key)
         """
         if not resume_skills or not job_skills:
             return {
@@ -115,6 +127,10 @@ class SkillsProcessor:
                 'total_resume_skills': len(resume_skills)
             }
         
+        # Convert skills to strings using helper method
+        resume_skill_strings = [self.extract_skill_string(skill) for skill in resume_skills]
+        job_skill_strings = [self.extract_skill_string(skill) for skill in job_skills]
+        
         matched_skills = []
         missing_skills = []
         used_resume_skills = set()
@@ -122,12 +138,12 @@ class SkillsProcessor:
         # Higher threshold for better precision
         FUZZY_THRESHOLD = 0.75
         
-        for job_skill in job_skills:
+        for job_skill in job_skill_strings:
             best_match = None
             best_similarity = 0.0
             best_resume_skill = None
             
-            for i, resume_skill in enumerate(resume_skills):
+            for i, resume_skill in enumerate(resume_skill_strings):
                 if i in used_resume_skills:
                     continue
                     
@@ -149,14 +165,14 @@ class SkillsProcessor:
             else:
                 missing_skills.append(job_skill)
         
-        match_percentage = (len(matched_skills) / len(job_skills)) * 100 if job_skills else 0
+        match_percentage = (len(matched_skills) / len(job_skill_strings)) * 100 if job_skill_strings else 0
         
         return {
             'match_percentage': match_percentage,
             'matched_skills': matched_skills,
             'missing_skills': missing_skills,
-            'total_job_skills': len(job_skills),
-            'total_resume_skills': len(resume_skills),
+            'total_job_skills': len(job_skill_strings),
+            'total_resume_skills': len(resume_skill_strings),
             'matching_details': {
                 'exact_matches': len([m for m in matched_skills if m['match_type'] == 'exact']),
                 'fuzzy_matches': len([m for m in matched_skills if m['match_type'] == 'fuzzy']),
