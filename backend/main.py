@@ -32,6 +32,10 @@ resume_parser = ResumeParser()
 job_parser = JobDescriptionParser()
 scoring_engine = OpenAIScoringEngine()
 
+# Preload embedding model at startup to avoid loading delays
+from utils.embedding_matcher import EmbeddingSkillsMatcher
+EmbeddingSkillsMatcher.preload_model()
+
 @app.post("/resume/score")
 async def score_resume(
     resume: UploadFile = File(...),
