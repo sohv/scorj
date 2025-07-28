@@ -81,7 +81,7 @@ class APIConfig:
 class LoggingConfig:
     level: str = "INFO"
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    file_path: str = "logs/resumeroast.log"
+    file_path: str = "logs/scorj.log"
     max_file_size_mb: int = 10
     backup_count: int = 5
 

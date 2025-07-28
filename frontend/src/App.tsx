@@ -74,8 +74,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>ResumeRoast</h1>
-        <p>Analyze your resume against LinkedIn jobs</p>
+        <h1>Scorj</h1>
+        <p>Score your resume against the job description and know the resume-job fit</p>
       </header>
 
       <main className="App-main">
@@ -121,7 +121,7 @@ function App() {
       </main>
 
       <footer className="App-footer">
-        <p>Built with React + FastAPI | AI-powered resume analysis</p>
+        <p>Built with React + FastAPI | Score your resume-job fit</p>
       </footer>
     </div>
   );
