@@ -4,6 +4,8 @@ import logging
 
 from .skills_matcher import SkillsProcessor
 from .structured_comments import process_user_comments
+from .embedding_matcher import EmbeddingSkillsMatcher
+from .dynamic_weights import DynamicWeightCalculator
 
 # set up logging
 logging.basicConfig(level=logging.INFO)
@@ -12,12 +14,11 @@ logger = logging.getLogger(__name__)
 class BaseScoringEngine:
     
     def __init__(self):
-        self.weights = {
-            'skills_match': 0.35,
-            'experience_match': 0.30,
-            'education_match': 0.15,
-            'domain_expertise': 0.20
-        }
+        # Initialize new components
+        self.embedding_matcher = EmbeddingSkillsMatcher()
+        self.weight_calculator = DynamicWeightCalculator()
+        
+        # No hardcoded fallback weights - will use equal distribution if needed
         
         # Simplified 3-tier scoring system
         self.score_ranges = {
@@ -26,15 +27,71 @@ class BaseScoringEngine:
             (0, 39): "Weak Match"
         }
         
-        # Enhanced skills processor
+        # Keep legacy skills processor as fallback
         self.skills_processor = SkillsProcessor()
+    
+    def get_dynamic_weights(self, job_data: Dict[str, Any]) -> Dict[str, float]:
+        """Get dynamic weights for scoring based on job context"""
+        return self.weight_calculator.calculate_scoring_weights(job_data)
 
     def _enhanced_skills_match(self, resume_skills: List[str], job_skills: List[str]) -> Dict[str, Any]:
-        return self.skills_processor.match_skills(resume_skills, job_skills)
+        """Use embedding-based semantic matching with fallback to legacy matcher"""
+        try:
+            # Try embedding-based matching first
+            embedding_result = self.embedding_matcher.calculate_semantic_similarity(resume_skills, job_skills)
+            
+            # Convert to expected format
+            return {
+                'match_percentage': embedding_result['coverage_percentage'],
+                'matching_skills': embedding_result['matched_skills'],
+                'total_job_skills': embedding_result['total_job_skills'],
+                'total_matched': embedding_result['total_matched'],
+                'skill_matches': embedding_result['skill_matches'],
+                'similarity_score': embedding_result['similarity_score'],
+                'method': 'embedding'
+            }
+        except Exception as e:
+            logger.warning(f"Embedding matching failed, using fallback: {e}")
+            # Fallback to legacy matching
+            legacy_result = self.skills_processor.match_skills(resume_skills, job_skills)
+            legacy_result['method'] = 'legacy'
+            return legacy_result
 
     def _calculate_experience_relevance(self, experience: List[Dict], job_title: str, job_description: str) -> Dict[str, Any]:
+        """Use embedding-based experience matching with fallback to legacy method"""
         if not experience:
             return {'relevance_score': 0, 'relevant_years': 0, 'total_years': 0}
+        
+        try:
+            # Try embedding-based experience matching
+            embedding_result = self.embedding_matcher.calculate_experience_similarity(experience, job_description)
+            
+            # Calculate years for relevant experiences
+            total_years = self._calculate_experience_years(experience)
+            relevant_years = 0
+            
+            for rel_exp in embedding_result['relevant_experiences']:
+                exp_index = rel_exp['index']
+                years = self._extract_years_from_date(experience[exp_index].get('date', ''), datetime.now().year)
+                # Weight years by similarity score
+                relevant_years += years * rel_exp['similarity']
+            
+            return {
+                'relevance_score': embedding_result['similarity_score'] * 100,
+                'relevant_years': relevant_years,
+                'total_years': total_years,
+                'relevance_ratio': relevant_years / max(1, total_years),
+                'relevant_experiences': embedding_result['relevant_experiences'],
+                'method': 'embedding'
+            }
+            
+        except Exception as e:
+            logger.warning(f"Embedding experience matching failed, using fallback: {e}")
+            # Fallback to legacy method
+            return self._legacy_calculate_experience_relevance(experience, job_title, job_description)
+    
+    def _legacy_calculate_experience_relevance(self, experience: List[Dict], job_title: str, job_description: str) -> Dict[str, Any]:
+        """Legacy keyword-based experience relevance calculation"""
         
         total_years = 0
         relevant_years = 0
@@ -82,7 +139,8 @@ class BaseScoringEngine:
             'relevance_score': relevance_score,
             'relevant_years': relevant_years,
             'total_years': total_years,
-            'relevance_ratio': relevant_years / max(1, total_years)
+            'relevance_ratio': relevant_years / max(1, total_years),
+            'method': 'legacy'
         }
 
     def _get_highest_degree(self, education: List[Dict]) -> str:
@@ -186,7 +244,7 @@ class BaseScoringEngine:
         
         return 0
 
-    def _create_base_prompt(self, resume_data: Dict[str, Any], job_data: Dict[str, Any], structured_analysis: Dict[str, Any], provider: str = "AI") -> str:
+    def _create_base_prompt(self, resume_data: Dict[str, Any], job_data: Dict[str, Any], structured_analysis: Dict[str, Any], provider: str = "AI", dynamic_weights: Dict[str, float] = None) -> str:
         
         resume_text = resume_data.get('full_text', 'Not available')
         job_description = job_data.get('description', 'Not available')
@@ -229,6 +287,20 @@ Original Comments: "{user_comments}"
                 # Don't include misaligned comments in the prompt to avoid negative influence
                 user_comments_section = ""
         
+        # Use dynamic weights if provided, otherwise use defaults
+        if dynamic_weights:
+            skills_weight = int(dynamic_weights.get('skills_match', 0.35) * 100)
+            experience_weight = int(dynamic_weights.get('experience_match', 0.30) * 100)
+            education_weight = int(dynamic_weights.get('education_match', 0.15) * 100)
+            domain_weight = int(dynamic_weights.get('domain_expertise', 0.20) * 100)
+            weight_source = "DYNAMIC (AI-calculated for this job)"
+        else:
+            skills_weight = 35
+            experience_weight = 30
+            education_weight = 15
+            domain_weight = 20
+            weight_source = "STATIC (fallback)"
+
         base_prompt = f"""
 You are a senior technical recruiter with 15+ years of experience. Analyze this resume against the job requirements and provide comprehensive scoring.
 
@@ -239,12 +311,12 @@ Pre-calculated Skills Match: {skills_analysis.get('match_percentage', 0):.1f}%
 Experience: {experience_analysis.get('total_years', 0)} years
 Education: {education_analysis.get('highest_degree', 'Not specified')}{user_comments_section}
 
-**SCORING METHODOLOGY:**
+**SCORING METHODOLOGY ({weight_source}):**
 Use these exact weights for scoring:
-- Technical Skills Match (35%)
-- Experience Relevance (30%) 
-- Education & Qualifications (15%)
-- Domain Expertise (20%)
+- Technical Skills Match ({skills_weight}%)
+- Experience Relevance ({experience_weight}%) 
+- Education & Qualifications ({education_weight}%)
+- Domain Expertise ({domain_weight}%)
 
 **CRITICAL SCORING GUIDELINES:**
 - Use FULL 0-100 range, avoid clustering around 70-85
