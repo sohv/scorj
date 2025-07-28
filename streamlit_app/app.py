@@ -89,17 +89,20 @@ def chat_with_ai(question: str, context: str = None):
         return None
 
 async def find_best_jobs(resume_file):
-    # Save the uploaded file to a temporary location
-    with open(resume_file.name, "wb") as f:
-        f.write(resume_file.getbuffer())
-
-    matcher = JobMatcher()
-    top_jobs = await matcher.find_best_jobs(resume_file.name)
-
-    # Clean up the temporary file
-    os.remove(resume_file.name)
-
-    return top_jobs
+    import tempfile
+    
+    # Create a temporary file with proper path
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+    temp_file.write(resume_file.getbuffer())
+    temp_file.close()
+    
+    try:
+        matcher = JobMatcher()
+        top_jobs = await matcher.find_best_jobs(temp_file.name)
+        return top_jobs
+    finally:
+        # Clean up the temporary file
+        os.remove(temp_file.name)
 
 
 # Streamlit UI

@@ -49,39 +49,43 @@ class JobMatcher:
         """
         Creates a more sophisticated search profile from the parsed resume data.
         """
-        # Extract skills and count their frequency
-        skills = resume_data.get('extracted_skills', [])
-        skill_counts = Counter(skills)
-        # Get the top 5 most frequent skills
-        top_skills = [skill for skill, count in skill_counts.most_common(5)]
+        # Use the new resume format - get skills from skills array
+        skills = resume_data.get('skills', [])
+        if skills:
+            # Get the top 5 skills
+            top_skills = skills[:5]
+        else:
+            top_skills = []
 
-        # Get the most recent job title
-        experience = resume_data.get('sections', {}).get('experience', [])
+        # Get the most recent job title from experience array
+        experience = resume_data.get('experience', [])
         latest_job_title = ''
         if experience:
             first_exp = experience[0]
             if isinstance(first_exp, dict):
                 latest_job_title = first_exp.get('title', '')
-            elif isinstance(first_exp, str):
-                # Take the first line of the string as a proxy for the title
-                latest_job_title = first_exp.split('\n')[0]
 
-        # Get education details
-        education = resume_data.get('sections', {}).get('education', [])
+        # Get education details from education array
+        education = resume_data.get('education', [])
         degree = ''
-        field_of_study = ''
         if education:
             first_edu = education[0]
             if isinstance(first_edu, dict):
                 degree = first_edu.get('degree', '')
-                field_of_study = first_edu.get('field', '')
-            elif isinstance(first_edu, str):
-                # Use the first line of the education string
-                degree = first_edu.split('\n')[0]
 
-        # Construct a more detailed search query
-        query_parts = [latest_job_title, degree, field_of_study] + top_skills
-        search_query = ' '.join(filter(None, query_parts))
+        # Construct search query with better fallbacks
+        query_parts = []
+        if latest_job_title:
+            query_parts.append(latest_job_title)
+        if degree:
+            query_parts.append(degree)
+        query_parts.extend(top_skills)
+        
+        # Fallback to generic search if no data
+        if not query_parts:
+            query_parts = ['software engineer']
+        
+        search_query = ' '.join(query_parts)
 
         return {
             'query': search_query,
