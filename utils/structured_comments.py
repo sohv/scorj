@@ -426,29 +426,43 @@ Only extract concrete claims. Empty arrays for no specific claims."""
         experience.alignment_score = base_score * experience.confidence_level
 
 
-def calculate_multi_dimensional_bonuses(analysis: MultiDimensionalAnalysis) -> Dict[str, float]:
-    """Calculate weighted bonuses based on multi-dimensional alignment scores"""
+def calculate_multi_dimensional_bonuses(analysis: MultiDimensionalAnalysis, dynamic_weights: Dict[str, float] = None) -> Dict[str, float]:
+    """Calculate weighted bonuses based on multi-dimensional alignment scores with dynamic weights"""
     bonuses = {}
     
-    # Technical Skills Alignment (40% weight, max 8 points)
+    # Always use dynamic weights - if not provided, use equal distribution
+    max_total_bonus = 20  # Total possible bonus points
+    
+    if dynamic_weights:
+        technical_max = dynamic_weights.get('technical_skills', 0.2) * max_total_bonus
+        work_max = dynamic_weights.get('work_arrangement', 0.2) * max_total_bonus
+        availability_max = dynamic_weights.get('availability', 0.2) * max_total_bonus
+        role_max = dynamic_weights.get('role_focus', 0.2) * max_total_bonus
+        experience_max = dynamic_weights.get('experience_level', 0.2) * max_total_bonus
+    else:
+        # Equal distribution fallback - no hardcoded preferences
+        equal_weight = 0.2  # 1/5 dimensions
+        technical_max = equal_weight * max_total_bonus
+        work_max = equal_weight * max_total_bonus
+        availability_max = equal_weight * max_total_bonus
+        role_max = equal_weight * max_total_bonus
+        experience_max = equal_weight * max_total_bonus
+    
+    # Calculate bonuses with dynamic or static weights
     if analysis.technical.alignment_score > 0:
-        bonuses['technical_alignment'] = analysis.technical.alignment_score * 8.0
+        bonuses['technical_alignment'] = analysis.technical.alignment_score * technical_max
     
-    # Work Arrangement Alignment (20% weight, max 4 points)
     if analysis.work_arrangement.alignment_score > 0:
-        bonuses['work_arrangement'] = analysis.work_arrangement.alignment_score * 4.0
+        bonuses['work_arrangement'] = analysis.work_arrangement.alignment_score * work_max
     
-    # Availability Alignment (15% weight, max 3 points)
     if analysis.availability.alignment_score > 0:
-        bonuses['availability'] = analysis.availability.alignment_score * 3.0
+        bonuses['availability'] = analysis.availability.alignment_score * availability_max
     
-    # Role Focus Alignment (15% weight, max 3 points)
     if analysis.role_focus.alignment_score > 0:
-        bonuses['role_focus'] = analysis.role_focus.alignment_score * 3.0
+        bonuses['role_focus'] = analysis.role_focus.alignment_score * role_max
     
-    # Experience Level Alignment (10% weight, max 2 points)
     if analysis.experience_level.alignment_score > 0:
-        bonuses['experience_level'] = analysis.experience_level.alignment_score * 2.0
+        bonuses['experience_level'] = analysis.experience_level.alignment_score * experience_max
     
     return bonuses
 
@@ -512,13 +526,16 @@ def generate_multi_dimensional_feedback(analysis: MultiDimensionalAnalysis, bonu
         feedback_parts.append(f"Total Alignment Bonus: +{total_bonus:.1f} points")
     
     if not feedback_parts:
-        return "No specific claims found - consider adding technical skills, work preferences, or availability details"
+        return "No job-aligned claims found - comments don't match job requirements"
+    
+    if total_bonus == 0:
+        return " | ".join(feedback_parts) + " | No bonus earned - claims don't align with job requirements"
     
     return " | ".join(feedback_parts)
 
 
-def process_user_comments(comments: str, job_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Process user comments using multi-dimensional analysis and proper alignment validation"""
+def process_user_comments(comments: str, job_data: Dict[str, Any], dynamic_weights: Dict[str, float] = None) -> Dict[str, Any]:
+    """Process user comments using multi-dimensional analysis with dynamic weights"""
     if not comments or not comments.strip():
         return {
             "multi_dimensional_analysis": {},
@@ -530,7 +547,17 @@ def process_user_comments(comments: str, job_data: Dict[str, Any]) -> Dict[str, 
     
     analyzer = GPTMultiDimensionalAnalyzer()
     analysis = analyzer.analyze_comments(comments, job_data)
-    bonuses = calculate_multi_dimensional_bonuses(analysis)
+    
+    # Get dynamic comment weights if not provided
+    if dynamic_weights is None:
+        from .dynamic_weights import DynamicWeightCalculator
+        weight_calculator = DynamicWeightCalculator()
+        try:
+            dynamic_weights = weight_calculator.calculate_comment_weights(job_data)
+        except Exception:
+            dynamic_weights = None  # Will use fallback weights
+    
+    bonuses = calculate_multi_dimensional_bonuses(analysis, dynamic_weights)
     feedback = generate_multi_dimensional_feedback(analysis, bonuses)
     
     # Extract alignment scores
