@@ -1,6 +1,6 @@
-# ResumeRoast
+# ScoRJ
 
-A resume scoring and analysis tool that evaluates resumes against job descriptions using OpenAI GPT models.
+A resume scoring and analysis tool that evaluates resumes against the LinkedIn job using AI (GPT 4o).
 
 ## Features
 
