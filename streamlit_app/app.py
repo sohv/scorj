@@ -81,7 +81,7 @@ def chat_with_ai(question: str, context: str = None):
         return None
 
 # Streamlit UI
-st.title("ResumeRoast")
+st.title("Scorj")
 st.write("**Score your resume against job descriptions**")
 
 # Test backend connection (silently)

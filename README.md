@@ -1,6 +1,6 @@
-# ScoRJ
+# Scorj
 
-A resume scoring and analysis tool that evaluates resumes against the LinkedIn job using AI (GPT 4o).
+Score your resume against the job description and know the resume-job fit using AI.
 
 ## Features
 
@@ -14,7 +14,7 @@ A resume scoring and analysis tool that evaluates resumes against the LinkedIn j
 ## Project Structure
 
 ```
-resumeroast/
+scorj/
 ├── backend/           # FastAPI REST API server
 ├── streamlit_app/     # Streamlit web interface
 ├── utils/             # Core parsing and scoring modules
@@ -27,8 +27,8 @@ resumeroast/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/sohv/resumeroast.git
-cd resumeroast
+git clone https://github.com/sohv/scorj.git
+cd scorj
 ```
 
 2. Create a virtual environment:
@@ -130,9 +130,9 @@ The scoring system uses a hybrid approach combining structured analysis with AI 
 - Recommendations provided for skill gaps and improvements
 - Transparency metrics show processing time and token usage
 
-## What Makes ResumeRoast Different
+## What Makes Scorj Different
 
-Unlike traditional resume reviewers that rely on keyword matching or basic templates, ResumeRoast offers several unique advantages:
+Unlike traditional resume reviewers that rely on keyword matching or basic templates, Scorj offers several unique advantages:
 
 ### Advanced AI Analysis
 - **Contextual Understanding**: Uses OpenAI GPT-4o-mini for deep content analysis beyond simple keyword matching

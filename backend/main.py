@@ -16,7 +16,7 @@ from utils.job_parser import JobDescriptionParser
 from utils.scoring_engine_openai import ScoringEngine as OpenAIScoringEngine
 
 # Initialize FastAPI app
-app = FastAPI(title="ResumeRoast API")
+app = FastAPI(title="Scorj API")
 
 # CORS middleware
 app.add_middleware(
