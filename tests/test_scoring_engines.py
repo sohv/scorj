@@ -20,20 +20,9 @@ class TestBaseScoringEngine:
     
     def test_base_engine_initialization(self, base_engine):
         assert base_engine is not None
-        assert hasattr(base_engine, 'weights')
+        assert hasattr(base_engine, 'embedding_matcher')
+        assert hasattr(base_engine, 'weight_calculator')
         assert hasattr(base_engine, 'score_ranges')
-    
-    def test_weights_configuration(self, base_engine):
-        weights = base_engine.weights
-        
-        assert 'skills_match' in weights
-        assert 'experience_match' in weights
-        assert 'education_match' in weights
-        assert 'domain_expertise' in weights
-        
-        # Weights should sum to 1.0
-        total_weight = sum(weights.values())
-        assert abs(total_weight - 1.0) < 0.01
     
     def test_score_ranges_configuration(self, base_engine):
         score_ranges = base_engine.score_ranges
