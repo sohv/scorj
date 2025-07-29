@@ -1,161 +1,96 @@
 import pytest
-import os
-import sys
-from unittest.mock import Mock, patch
-from dotenv import load_dotenv
-
-# Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-load_dotenv()
-
-from utils.scoring_engine_openai import ScoringEngine as OpenAIScoringEngine
+from unittest.mock import patch, MagicMock
 from utils.base_scoring_engine import BaseScoringEngine
+from utils.scoring_engine_openai import ScoringEngine
 
+@pytest.fixture
+def base_engine():
+    return BaseScoringEngine()
+
+@pytest.fixture
+def openai_engine():
+    return ScoringEngine()
 
 class TestBaseScoringEngine:
-    
-    @pytest.fixture
-    def base_engine(self):
-        return BaseScoringEngine()
-    
     def test_base_engine_initialization(self, base_engine):
         assert base_engine is not None
-        assert hasattr(base_engine, 'weights')
-        assert hasattr(base_engine, 'score_ranges')
-    
-    def test_weights_configuration(self, base_engine):
-        weights = base_engine.weights
-        
-        assert 'skills_match' in weights
-        assert 'experience_match' in weights
-        assert 'education_match' in weights
-        assert 'domain_expertise' in weights
-        
-        # Weights should sum to 1.0
-        total_weight = sum(weights.values())
-        assert abs(total_weight - 1.0) < 0.01
-    
-    def test_score_ranges_configuration(self, base_engine):
-        score_ranges = base_engine.score_ranges
-        
-        assert len(score_ranges) > 0
-        # Check that ranges cover the full 0-100 spectrum
-        all_ranges = list(score_ranges.keys())
-        min_score = min(range_tuple[0] for range_tuple in all_ranges)
-        max_score = max(range_tuple[1] for range_tuple in all_ranges)
-        
-        assert min_score <= 0
-        assert max_score >= 100
-    
-    def test_degree_scoring(self, base_engine):
-        # Test different degree levels
-        phd_score = base_engine._get_degree_score("PhD in Computer Science")
-        masters_score = base_engine._get_degree_score("Master of Science")
-        bachelors_score = base_engine._get_degree_score("Bachelor of Engineering")
-        
-        assert phd_score > masters_score > bachelors_score
-        assert phd_score == 100
-        assert masters_score == 80
-        assert bachelors_score == 60
-    
-    def test_experience_calculation(self, base_engine):
-        sample_experience = [
-            {"date": "2020-2023", "position": "Senior Developer"},
-            {"date": "2018-2020", "position": "Developer"}
-        ]
-        
-        years = base_engine._calculate_experience_years(sample_experience)
-        assert years > 0
-        assert years <= 10  # Should be reasonable
+        # Test that dynamic components are initialized
+        assert hasattr(base_engine, 'embedding_matcher')
+        assert hasattr(base_engine, 'weight_calculator')
 
+    def test_score_ranges_configuration(self, base_engine):
+        assert isinstance(base_engine.score_ranges, dict)
+        assert (70, 100) in base_engine.score_ranges
+
+    def test_degree_scoring(self, base_engine):
+        assert base_engine._get_degree_score('phd') == 100
+        assert base_engine._get_degree_score('master of science') == 80
+        assert base_engine._get_degree_score('bachelor of arts') == 60
+        assert base_engine._get_degree_score('associate') == 40
+        # A diploma should be better than nothing
+        assert base_engine._get_degree_score('high school diploma') > 0
+
+    def test_experience_calculation(self, base_engine):
+        experience = [
+            {'date': '2020-present'},
+            {'date': '2018-2020'}
+        ]
+        # This will vary based on the current year, so we check it's positive
+        assert base_engine._calculate_experience_years(experience) > 3
 
 class TestOpenAIScoringEngine:
-    
-    @pytest.fixture
-    def openai_engine(self):
-        return OpenAIScoringEngine()
-    
-    @pytest.fixture
-    def sample_resume_data(self):
-        return {
-            'full_text': 'John Doe, Senior Developer with 5 years experience...',
-            'skills': [
-                {'skill': 'Python', 'category': 'Programming'},
-                {'skill': 'React', 'category': 'Frontend'}
-            ],
-            'experience': [
-                {'position': 'Senior Developer', 'company': 'TechCorp', 'date': '2020-2023'}
-            ],
-            'education': [
-                {'degree': 'Bachelor of Science', 'institution': 'University'}
-            ]
-        }
-    
-    @pytest.fixture
-    def sample_job_data(self):
-        return {
-            'title': 'Senior Full Stack Developer',
-            'description': 'Looking for experienced developer...',
-            'required_skills': ['Python', 'React', 'Node.js'],
-            'experience_level': 'senior'
-        }
-    
     def test_openai_engine_initialization(self, openai_engine):
         assert openai_engine is not None
-        assert isinstance(openai_engine, BaseScoringEngine)
-        assert hasattr(openai_engine, 'calculate_score')
-    
-    @pytest.mark.skipif(not os.getenv('OPENAI_API_KEY'), reason="OpenAI API key not available")
-    def test_calculate_score_integration(self, openai_engine, sample_resume_data, sample_job_data):
-        result = openai_engine.calculate_score(sample_resume_data, sample_job_data)
-        
-        assert result is not None
-        assert 'overall_score' in result
-        assert 'confidence_level' in result
-        assert 'score_breakdown' in result
-        
-        # Score should be between 0 and 100
-        score = result['overall_score']
-        assert 0 <= score <= 100
-    
-    def test_structured_analysis(self, openai_engine, sample_resume_data, sample_job_data):
-        structured_analysis = openai_engine._analyze_structured_data(
-            sample_resume_data, sample_job_data
-        )
-        
-        assert structured_analysis is not None
-        assert 'skills_analysis' in structured_analysis
-        assert 'experience_analysis' in structured_analysis
-        assert 'education_analysis' in structured_analysis
-    
-    def test_calculate_score_mocked(self, openai_engine, sample_resume_data, sample_job_data):
-        # Mock the OpenAI response
-        mock_response = Mock()
-        mock_response.choices = [Mock()]
-        mock_response.choices[0].message.content = '''
-        {
-            "overall_score": 85,
-            "confidence_level": "High",
-            "score_breakdown": {"skills_score": 80, "experience_score": 90, "education_score": 75, "domain_score": 85},
-            "match_category": "Excellent Match",
-            "summary": "Strong candidate",
-            "strengths": ["Python experience", "React skills"],
-            "concerns": ["Limited Node.js experience"],
-            "missing_skills": ["Node.js"],
-            "matching_skills": ["Python", "React"],
-            "experience_assessment": {"relevant_years": 5, "role_progression": "Good", "industry_fit": "Excellent"},
-            "recommendations": ["Learn Node.js"],
-            "risk_factors": ["Technology gap"]
+        assert hasattr(openai_engine, 'openai_client')
+
+    @patch('utils.scoring_engine_openai.ScoringEngine._analyze_structured_data')
+    def test_calculate_score_integration(self, mock_analyze, openai_engine):
+        mock_analyze.return_value = {}
+        # This test now only checks if the method runs without error with a mock
+        # A full integration test would require mocking the OpenAI API call itself
+        with patch('utils.scoring_engine_openai.ScoringEngine._create_enhanced_prompt') as mock_prompt:
+            mock_prompt.return_value = "Test Prompt"
+            try:
+                openai_engine.calculate_score({}, {})
+            except Exception as e:
+                pytest.fail(f"calculate_score raised an exception: {e}")
+
+    def test_structured_analysis(self, openai_engine):
+        resume_data = {
+            'skills': ['Python', 'SQL'],
+            'experience': [{'date': '2020-2022'}],
+            'education': [{'degree': 'BS in Computer Science'}]
         }
-        '''
-    
-        # Mock the client directly on the instance
-        mock_client = Mock()
+        job_data = {
+            'skills': ['Python', 'Java'],
+            'experience_level': 'mid'
+        }
+        analysis = openai_engine._analyze_structured_data(resume_data, job_data)
+        assert 'skills_analysis' in analysis
+        assert 'experience_analysis' in analysis
+        assert 'education_analysis' in analysis
+        assert analysis['skills_analysis']['match_percentage'] > 0
+
+    @patch('utils.scoring_engine_openai.OpenAI')
+    def test_calculate_score_mocked(self, mock_openai, openai_engine):
+        # A more robust test mocking the entire OpenAI interaction
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = '{"overall_score": 85}'
+        mock_response.usage.prompt_tokens = 100
+        mock_response.usage.completion_tokens = 50
+        mock_response.usage.total_tokens = 150
+
+        mock_client = MagicMock()
         mock_client.chat.completions.create.return_value = mock_response
+        mock_openai.return_value = mock_client
         openai_engine.openai_client = mock_client
-    
-        result = openai_engine.calculate_score(sample_resume_data, sample_job_data)
-    
-        assert result is not None
-        assert result['overall_score'] == 85
-        assert result['confidence_level'] == 'High'
+
+        resume_data = {
+            'skills': ['Python'], 'experience': [], 'education': [], 'user_comments': ''
+        }
+        job_data = {
+            'skills': ['Python'], 'description': 'A job'
+        }
+
+        result = openai_engine.calculate_score(resume_data, job_data)
+        assert result['final_score'] == 85

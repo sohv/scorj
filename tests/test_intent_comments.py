@@ -1,237 +1,204 @@
 import pytest
+import json
 from unittest.mock import patch, MagicMock
 from utils.structured_comments import (
-    process_user_comments, 
-    GPTIntentAnalyzer, 
-    IntentAnalysis,
-    calculate_intent_bonuses,
-    generate_intent_feedback,
-    validate_comment_alignment
+    process_user_comments,
+    GPTMultiDimensionalAnalyzer,
+    MultiDimensionalAnalysis,
+    TechnicalAlignment,
+    WorkArrangementAlignment,
+    AvailabilityAlignment,
+    RoleFocusAlignment,
+    ExperienceLevelAlignment,
+    calculate_multi_dimensional_bonuses,
+    generate_multi_dimensional_feedback
 )
 
-def test_empty_comments():
-    """Test handling of empty input"""
+# Test for empty or invalid input
+def test_process_empty_comments():
+    """Test that empty comments return a default structure with zero bonus."""
     result = process_user_comments("", {})
-    
     assert result['total_bonus'] == 0
-    assert 'No context provided' in result['structured_feedback']
-    assert result['intent_analysis'] == {}
+    assert result['structured_feedback'] == "No context provided"
+    # The 'multi_dimensional_analysis' key should be present but empty
+    assert result['multi_dimensional_analysis'] == {}
 
-def test_intent_analysis_creation():
-    """Test IntentAnalysis dataclass creation"""
-    analysis = IntentAnalysis(
-        work_preference_strength=0.8,
-        work_preference_type="remote",
-        availability_urgency=0.9,
-        availability_timeline="immediate"
+# Test the main dataclass
+def test_multi_dimensional_analysis_creation():
+    """Test the creation of the main analysis dataclass."""
+    analysis = MultiDimensionalAnalysis(
+        technical=TechnicalAlignment(claimed_skills=["Python"], alignment_score=0.8),
+        work_arrangement=WorkArrangementAlignment(preferred_arrangement="remote", alignment_score=1.0)
+    )
+    assert analysis.technical.alignment_score == 0.8
+    assert analysis.work_arrangement.preferred_arrangement == "remote"
+    assert analysis.availability.alignment_score == 0.0  # Default value
+
+# Test bonus calculation
+def test_calculate_multi_dimensional_bonuses():
+    """Test the bonus calculation logic with dynamic weights."""
+    analysis = MultiDimensionalAnalysis(
+        technical=TechnicalAlignment(alignment_score=0.9),
+        work_arrangement=WorkArrangementAlignment(alignment_score=1.0),
+        availability=AvailabilityAlignment(alignment_score=0.0), # No alignment
+        role_focus=RoleFocusAlignment(alignment_score=0.7),
+        experience_level=ExperienceLevelAlignment(alignment_score=0.5)
     )
     
-    assert analysis.work_preference_strength == 0.8
-    assert analysis.work_preference_type == "remote"
-    assert analysis.learning_areas == []  # default empty list
+    # With dynamic weights
+    dynamic_weights = {
+        'technical_skills': 0.4,
+        'work_arrangement': 0.1,
+        'availability': 0.1,
+        'role_focus': 0.2,
+        'experience_level': 0.2
+    }
+    
+    bonuses = calculate_multi_dimensional_bonuses(analysis, dynamic_weights)
+    
+    # Max bonus is 20 points
+    assert bonuses['technical_alignment'] == pytest.approx(0.9 * (0.4 * 20))
+    assert bonuses['work_arrangement'] == pytest.approx(1.0 * (0.1 * 20))
+    assert 'availability' not in bonuses # Score is 0, so no bonus key
+    assert bonuses['role_focus'] == pytest.approx(0.7 * (0.2 * 20))
+    assert bonuses['experience_level'] == pytest.approx(0.5 * (0.2 * 20))
 
-def test_calculate_intent_bonuses():
-    """Test bonus calculation logic"""
-    analysis = IntentAnalysis(
-        work_preference_strength=0.8,
-        work_preference_type="remote",
-        availability_urgency=0.9,
-        availability_timeline="immediate",
-        learning_motivation=0.7
+# Test feedback generation
+def test_generate_multi_dimensional_feedback():
+    """Test the generation of human-readable feedback."""
+    analysis = MultiDimensionalAnalysis(
+        technical=TechnicalAlignment(claimed_skills=["Python", "AWS"], alignment_score=0.8),
+        work_arrangement=WorkArrangementAlignment(preferred_arrangement="remote", alignment_score=1.0)
     )
+    bonuses = {'technical_alignment': 5.0, 'work_arrangement': 2.0}
     
-    job_data = {'description': 'remote work opportunity with machine learning'}
-    bonuses = calculate_intent_bonuses(analysis, job_data)
+    feedback = generate_multi_dimensional_feedback(analysis, bonuses)
     
-    assert 'work_preference' in bonuses
-    assert 'availability' in bonuses
-    assert 'learning' in bonuses
-    assert bonuses['work_preference'] > 0  # Should get remote work bonus
-    assert bonuses['availability'] > 0     # Should get availability bonus
+    assert "Technical Skills: Python, AWS (Strong match)" in feedback
+    assert "Work Style: Remote (Aligned)" in feedback
+    assert "Total Alignment Bonus: +7.0 points" in feedback
 
-def test_generate_intent_feedback():
-    """Test feedback generation"""
-    analysis = IntentAnalysis(
-        work_preference_strength=0.8,
-        work_preference_type="remote",
-        availability_urgency=0.7,
-        availability_timeline="immediate",
-        learning_areas=["Python", "AI"]
-    )
-    
-    bonuses = {'work_preference': 4.0, 'availability': 3.0}
-    feedback = generate_intent_feedback(analysis, bonuses)
-    
-    assert "Work Style: Remote" in feedback
-    assert "Availability: Immediate" in feedback
-    assert "Intent Bonuses" in feedback
-
+# Mock the GPT call for the analyzer
 @patch('utils.structured_comments.OpenAI')
 def test_gpt_analyzer_success(mock_openai):
-    """Test successful GPT analysis"""
-    # Mock OpenAI response
-    mock_response = MagicMock()
-    mock_response.choices[0].message.content = '''
-    {
-        "work_preference_strength": 0.8,
-        "work_preference_type": "remote",
-        "availability_urgency": 0.9,
-        "availability_timeline": "immediate",
-        "learning_motivation": 0.7,
-        "learning_areas": ["Machine Learning"],
-        "relocation_flexibility": 0.5,
-        "experience_confidence": 0.6,
-        "additional_strengths": ["Python"]
+    """Test a successful analysis by the GPTMultiDimensionalAnalyzer."""
+    mock_response_content = {
+        "technical": {
+            "claimed_skills": ["Python", "React"],
+            "experience_claims": ["Built a full-stack app"],
+            "technical_confidence": 0.9
+        },
+        "work_arrangement": {
+            "preferred_arrangement": "remote",
+            "arrangement_strength": 0.8
+        },
+        "availability": {
+            "availability_timeline": "immediate",
+            "availability_urgency": 1.0
+        },
+        "role_focus": {
+            "role_interests": ["frontend development"],
+            "focus_areas": ["UI/UX"]
+        },
+        "experience_level": {
+            "experience_level_claim": "mid",
+            "confidence_level": 0.85
+        }
     }
-    '''
+    
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = json.dumps(mock_response_content)
     
     mock_client = MagicMock()
     mock_client.chat.completions.create.return_value = mock_response
     mock_openai.return_value = mock_client
     
-    analyzer = GPTIntentAnalyzer()
-    result = analyzer.analyze_intent("I love remote work and am ready to start immediately", {})
+    analyzer = GPTMultiDimensionalAnalyzer()
+    # Mock job data for validation context
+    job_data = {
+        'description': 'seeking a remote python developer for a mid-level role.',
+        'title': 'Software Engineer'
+    }
     
-    assert result.work_preference_strength == 0.8
-    assert result.work_preference_type == "remote"
-    assert result.availability_urgency == 0.9
-    assert "Machine Learning" in result.learning_areas
+    analysis = analyzer.analyze_comments("I am a mid-level python dev looking for a remote role.", job_data)
+    
+    # Check if parsing was successful
+    assert analysis.technical.technical_confidence == 0.9
+    assert analysis.work_arrangement.preferred_arrangement == "remote"
+    
+    # Check if validation logic was triggered and produced a score > 0
+    assert analysis.technical.alignment_score > 0
+    assert analysis.work_arrangement.alignment_score > 0
+    assert analysis.experience_level.alignment_score > 0
 
+# Test error handling in the analyzer
 @patch('utils.structured_comments.OpenAI')
 def test_gpt_analyzer_error_handling(mock_openai):
-    """Test GPT analyzer error handling"""
-    # Mock OpenAI to raise an exception
+    """Test that the analyzer returns a default object on API error."""
     mock_client = MagicMock()
     mock_client.chat.completions.create.side_effect = Exception("API Error")
     mock_openai.return_value = mock_client
     
-    analyzer = GPTIntentAnalyzer()
-    result = analyzer.analyze_intent("Some comment", {})
+    analyzer = GPTMultiDimensionalAnalyzer()
+    analysis = analyzer.analyze_comments("some comment", {})
     
-    # Should return empty analysis on error
-    assert result.work_preference_strength == 0.0
-    assert result.work_preference_type == ""
+    # Should return a default, empty analysis object
+    assert analysis.technical.alignment_score == 0.0
+    assert analysis.work_arrangement.preferred_arrangement == ""
 
-@patch('utils.structured_comments.OpenAI')
-def test_process_user_comments_integration(mock_openai):
-    """Test the complete process_user_comments function"""
-    # Mock the OpenAI client and its response
-    mock_client = MagicMock()
-    mock_response = MagicMock()
-    mock_response.choices[0].message.content = '''
-    {
-        "work_preference_strength": 0.8,
-        "work_preference_type": "remote",
-        "availability_urgency": 0.9,
-        "availability_timeline": "immediate",
-        "learning_motivation": 0.5,
-        "learning_areas": [],
-        "relocation_flexibility": 0.0,
-        "experience_confidence": 0.6,
-        "additional_strengths": []
-    }
-    '''
-    mock_client.chat.completions.create.return_value = mock_response
-    mock_openai.return_value = mock_client
+# Test the full integration of process_user_comments
+@patch('utils.structured_comments.GPTMultiDimensionalAnalyzer.analyze_comments')
+@patch('utils.dynamic_weights.DynamicWeightCalculator.calculate_comment_weights')
+def test_process_user_comments_integration(mock_calc_weights, mock_analyze_comments):
+    """Test the full process_user_comments function with mocks."""
+    # Mock the analysis result
+    mock_analysis = MultiDimensionalAnalysis(
+        technical=TechnicalAlignment(claimed_skills=["Python"], alignment_score=0.8),
+        work_arrangement=WorkArrangementAlignment(preferred_arrangement="remote", alignment_score=0.9)
+    )
+    mock_analyze_comments.return_value = mock_analysis
     
-    comments = "I prefer working remotely and can start immediately"
-    job_data = {'description': 'remote position available'}
+    # Mock the dynamic weights
+    mock_weights = {'technical_skills': 0.5, 'work_arrangement': 0.5}
+    mock_calc_weights.return_value = mock_weights
+    
+    comments = "I am a great fit"
+    job_data = {'description': 'a job'}
     
     result = process_user_comments(comments, job_data)
     
     assert result['total_bonus'] > 0
-    assert 'intent_analysis' in result
-    assert 'scoring_adjustments' in result
-    assert 'structured_feedback' in result
+    assert result['scoring_adjustments']['technical_alignment'] > 0
+    assert result['scoring_adjustments']['work_arrangement'] > 0
+    assert "Technical Skills" in result['structured_feedback'] # Check if feedback was generated
 
-def test_comment_alignment_validation():
-    """Test that misaligned comments don't get bonus points"""
-    # Remote job, but candidate wants onsite - should be misaligned
-    analysis_remote_job_onsite_pref = IntentAnalysis(
-        work_preference_strength=0.8,
-        work_preference_type="onsite"
-    )
-    job_data_remote = {'description': 'This is a fully remote position working from home'}
+# Test specific validation scenarios
+def test_alignment_validation_logic():
+    """Test specific validation cases for alignment scores."""
+    analyzer = GPTMultiDimensionalAnalyzer()
     
-    # Should return False for misalignment
-    assert validate_comment_alignment(analysis_remote_job_onsite_pref, job_data_remote) == False
-    
-    # Should get no bonus points due to misalignment
-    bonuses = calculate_intent_bonuses(analysis_remote_job_onsite_pref, job_data_remote)
-    assert bonuses == {}
-    
-    # Onsite job, but candidate wants remote - should be misaligned
-    analysis_onsite_job_remote_pref = IntentAnalysis(
-        work_preference_strength=0.8,
-        work_preference_type="remote"
-    )
-    job_data_onsite = {'description': 'This position requires working in our office onsite'}
-    
-    # Should return False for misalignment
-    assert validate_comment_alignment(analysis_onsite_job_remote_pref, job_data_onsite) == False
-    
-    # Should get no bonus points due to misalignment
-    bonuses = calculate_intent_bonuses(analysis_onsite_job_remote_pref, job_data_onsite)
-    assert bonuses == {}
+    # SCENARIO 1: Misaligned work preference (Job: remote, User: onsite)
+    work_pref = WorkArrangementAlignment(preferred_arrangement="onsite", arrangement_strength=0.9)
+    job_req_remote = analyzer._extract_job_requirements({'description': 'fully remote job'})
+    analyzer._validate_work_arrangement_alignment(work_pref, job_req_remote)
+    assert work_pref.alignment_score == 0.0 # Should be 0 for direct conflict
 
-def test_availability_alignment_validation():
-    """Test availability timeline alignment"""
-    # Urgent job, but candidate needs months - should be misaligned
-    analysis_slow_start = IntentAnalysis(
-        availability_urgency=0.8,
-        availability_timeline="months"
-    )
-    job_data_urgent = {'description': 'Urgent position needs immediate start ASAP'}
-    
-    assert validate_comment_alignment(analysis_slow_start, job_data_urgent) == False
-    bonuses = calculate_intent_bonuses(analysis_slow_start, job_data_urgent)
-    assert bonuses == {}
+    # SCENARIO 2: Aligned technical skills (Job requires Python, User claims Python)
+    tech_claim = TechnicalAlignment(claimed_skills=["Python"], technical_confidence=0.9)
+    job_req_python = analyzer._extract_job_requirements({'description': 'must have python'})
+    analyzer._validate_technical_alignment(tech_claim, job_req_python)
+    assert tech_claim.alignment_score > 0.7 # Should be high
 
-def test_experience_level_alignment():
-    """Test experience level alignment"""
-    # Senior job, but candidate lacks confidence - should be misaligned
-    analysis_low_confidence = IntentAnalysis(
-        experience_confidence=0.5  # Below 0.7 threshold for senior roles
-    )
-    job_data_senior = {'description': 'Senior developer position requiring expert-level skills'}
-    
-    assert validate_comment_alignment(analysis_low_confidence, job_data_senior) == False
-    
-    # Entry-level job, but candidate is overconfident - should be misaligned
-    analysis_overconfident = IntentAnalysis(
-        experience_confidence=0.95  # Very high confidence for entry-level
-    )
-    job_data_entry = {'description': 'Entry level junior developer position for recent graduates'}
-    
-    assert validate_comment_alignment(analysis_overconfident, job_data_entry) == False
+    # SCENARIO 3: Misaligned technical skills (Job requires Python, User claims Java)
+    tech_claim_wrong = TechnicalAlignment(claimed_skills=["Java"], technical_confidence=0.9)
+    analyzer._validate_technical_alignment(tech_claim_wrong, job_req_python)
+    assert tech_claim_wrong.alignment_score == 0.0 # Should be 0
 
-def test_learning_requirements_alignment():
-    """Test learning vs required skills alignment"""
-    # Job requires Python, but user wants to learn Python (suggests they don't know it) - misaligned
-    analysis_wants_to_learn_required = IntentAnalysis(
-        learning_motivation=0.8,
-        learning_areas=["Python"]
-    )
-    job_data_requires_python = {'description': 'Required Python expertise and must have Python experience'}
-    
-    assert validate_comment_alignment(analysis_wants_to_learn_required, job_data_requires_python) == False
-
-def test_comment_alignment_success():
-    """Test that aligned comments do get bonus points"""
-    # Remote job, candidate wants remote - should be aligned
-    analysis_aligned = IntentAnalysis(
-        work_preference_strength=0.8,
-        work_preference_type="remote"
-    )
-    job_data_remote = {'description': 'This is a fully remote position working from home'}
-    
-    # Should return True for alignment
-    assert validate_comment_alignment(analysis_aligned, job_data_remote) == True
-    
-    # Should get bonus points due to alignment
-    bonuses = calculate_intent_bonuses(analysis_aligned, job_data_remote)
-    assert 'work_preference' in bonuses
-    assert bonuses['work_preference'] > 0
+    # SCENARIO 4: Misaligned experience level (Job: senior, User: junior)
+    exp_claim = ExperienceLevelAlignment(experience_level_claim="junior", confidence_level=0.9)
+    job_req_senior = analyzer._extract_job_requirements({'title': 'senior software engineer'})
+    analyzer._validate_experience_level_alignment(exp_claim, job_req_senior)
+    assert exp_claim.alignment_score == 0.0 # Junior applying to senior is 0
 
 if __name__ == "__main__":
     pytest.main([__file__])

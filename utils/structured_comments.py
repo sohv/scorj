@@ -84,18 +84,21 @@ class GPTMultiDimensionalAnalyzer:
         # Analyze user claims across all dimensions
         analysis_prompt = self._create_analysis_prompt(comments, job_requirements)
         
-        response = self.openai_client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": "You are an expert at analyzing candidate comments for alignment with job requirements across technical skills, work arrangement, availability, role focus, and experience level."},
-                {"role": "user", "content": analysis_prompt}
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.1,
-            max_tokens=1200
-        )
-        
-        result = json.loads(response.choices[0].message.content)
+        try:
+            response = self.openai_client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert at analyzing candidate comments for alignment with job requirements across technical skills, work arrangement, availability, role focus, and experience level."},
+                    {"role": "user", "content": analysis_prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1,
+                max_tokens=1200
+            )
+            result = json.loads(response.choices[0].message.content)
+        except Exception as e:
+            # In case of API error, return an empty analysis object
+            return MultiDimensionalAnalysis()
         
         # Parse the GPT response into structured analysis
         multi_analysis = self._parse_multi_dimensional_response(result)
