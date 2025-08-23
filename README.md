@@ -1,26 +1,27 @@
 # Scorj
 
-Score your resume against the job description and know the resume-job fit using AI.
+A tool that scores resumes against job descriptions, providing detailed feedback and analytics on resume-job fit.
 
 ## Features
 
-- Resume parsing from PDF and DOCX formats
-- Job description analysis and skill extraction
-- Intelligent resume scoring with detailed feedback
-- Skills matching with fuzzy logic
-- Web interface via Streamlit
-- REST API backend with FastAPI
+- Intelligent resume parsing from PDF and DOCX formats
+- Advanced job description analysis and requirement extraction
+- AI-powered resume scoring with comprehensive feedback
+- Semantic skills matching using embeddings and fuzzy logic
+- Modern React frontend with interactive user interface
+- RESTful API backend built with FastAPI
 
 ## Project Structure
 
 ```
 scorj/
-├── backend/           # FastAPI REST API server
-├── streamlit_app/     # Streamlit web interface
-├── utils/             # Core parsing and scoring modules
-├── tests/             # Test suite
-├── config.py          # Configuration management
-└── requirements.txt   # Python dependencies
+├── backend/           
+├── frontend/          
+├── utils/             
+├── tests/             
+├── config.py         
+├── requirements.txt  
+└── Procfile           
 ```
 
 ## Installation
@@ -44,7 +45,7 @@ pip install -r requirements.txt
 
 4. Set up environment variables:
 ```bash
-# Create .env file with:
+# create .env file with:
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
@@ -52,16 +53,17 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ### Start the FastAPI backend:
 ```bash
-cd backend
-uvicorn main:app --reload
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 The API will be available at http://localhost:8000
 
-### Start the Streamlit interface:
+### Start the React frontend:
 ```bash
-streamlit run streamlit_app/app.py
+cd frontend
+npm install
+npm start
 ```
-The web interface will be available at http://localhost:8501
+The web interface will be available at http://localhost:3000
 
 ## Testing
 
@@ -80,7 +82,7 @@ Available test commands:
 
 - **Resume Parser**: Extracts structured data from PDF/DOCX files
 - **Job Parser**: Analyzes job descriptions and extracts requirements
-- **Skills Matcher**: Fuzzy matching for technical skills
+- **Skills Matcher**: Uses embeddings and fuzzy matching for semantic skill analysis
 - **Scoring Engine**: OpenAI-powered resume evaluation
 - **Base Scoring Engine**: Structured analysis and scoring logic
 
@@ -92,15 +94,15 @@ Available test commands:
    - Work experience with dates and descriptions
    - Education details
    - Skills and technologies
-3. **Job Description Input**: User provides job description text
+3. **Job Description Input**: User provides job description text or URL
 4. **Job Analysis**: Parse job requirements including:
    - Required skills and technologies
    - Experience level expectations
    - Company and role information
-5. **Skills Matching**: Compare resume skills against job requirements using fuzzy matching
+5. **Skills Matching**: Compare resume skills against job requirements using semantic matching
 6. **Scoring Analysis**: Generate comprehensive score using OpenAI GPT model
 7. **Results Display**: Present detailed feedback with:
-   - Overall score and breakdown
+   - Overall score and dimension-specific scores
    - Matching and missing skills
    - Strengths and areas for improvement
    - Actionable recommendations
@@ -110,7 +112,7 @@ Available test commands:
 The scoring system uses a hybrid approach combining structured analysis with AI evaluation:
 
 ### Structured Analysis (Base Scoring Engine)
-- **Skills Matching**: Fuzzy string matching with 75% similarity threshold
+- **Skills Matching**: Semantic embedding comparison with fuzzy string matching
 - **Experience Evaluation**: Years of experience vs job requirements
 - **Education Assessment**: Degree level scoring (Bachelor's: 60, Master's: 80, PhD: 100)
 - **Relevance Calculation**: Domain-specific experience weighting
@@ -119,10 +121,10 @@ The scoring system uses a hybrid approach combining structured analysis with AI 
 - **Contextual Analysis**: GPT-4o-mini evaluates resume content against job description
 - **Qualitative Assessment**: Analyzes writing quality, achievements, and cultural fit
 - **Comprehensive Scoring**: Generates scores across four dimensions:
-  - Skills Score (35% weight)
-  - Experience Score (30% weight)
-  - Education Score (15% weight)
-  - Domain Score (20% weight)
+  - Skills Score (40% weight)
+  - Experience Score (25% weight)
+  - Education Score (20% weight)
+  - Domain Score (15% weight)
 
 ### Score Calculation
 - Final score combines structured analysis with AI evaluation
@@ -139,30 +141,19 @@ Unlike traditional resume reviewers that rely on keyword matching or basic templ
 - **Job-Specific Evaluation**: Scores resumes specifically against provided job descriptions rather than generic criteria
 - **Qualitative Assessment**: Evaluates writing quality, achievement presentation, and cultural fit indicators
 
-### Hybrid Scoring Approach
-- **Structured + AI Evaluation**: Combines rule-based scoring with AI insights for balanced assessment
-- **Transparent Methodology**: Clear breakdown of scoring weights and confidence levels
-- **Fuzzy Skills Matching**: 75% similarity threshold catches skill variations (e.g., "JavaScript" matches "JS")
+### Semantic Matching Technology
+- **Embedding-Based Matching**: Uses sentence transformers to find semantically similar skills
+- **Fuzzy String Matching**: Catches variations in skill names and terminology
+- **Contextual Relevance**: Understands the importance of skills in the job context
 
 ### Technical Architecture
-- **Open Source**: Full transparency with customizable scoring logic
 - **API-First Design**: REST API backend enables integration with other tools
-- **Modern Stack**: FastAPI backend with Streamlit frontend for performance and usability
-- **Comprehensive Testing**: 28 test cases ensure reliability and accuracy
+- **Modern Stack**: FastAPI backend with React frontend for performance and usability
+- **Comprehensive Testing**: Extensive test cases ensure reliability and accuracy
 
 ### User-Centric Features
 - **Actionable Feedback**: Specific recommendations for improvement rather than just scores
 - **Skills Gap Analysis**: Identifies missing skills with suggestions for development
 - **Processing Transparency**: Shows analysis time and token usage for trust and debugging
 - **Multiple Formats**: Supports both PDF and DOCX resume formats
-
-### Smart Context Analysis
-- **Structured Comments**: Automatically extracts work preferences, availability, and goals from user input
-- **Bonus Scoring**: Up to 15+ bonus points for relevant context alignment
-- **Preference Matching**: Work location, availability, and experience level matching
-- **Learning Motivation**: Additional points for demonstrated learning goals and career growth mindset
-
-## Requirements
-
-- OpenAI API key
-- Dependencies listed in requirements.txt
+- **Interactive Chat**: AI-powered chat assistant for resume and job-specific questions
