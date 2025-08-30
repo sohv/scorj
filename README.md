@@ -2,6 +2,8 @@
 
 A tool that scores resumes against job descriptions, providing detailed feedback and analytics on resume-job fit.
 
+👉 Click [here](https://www.youtube.com/watch?v=yroFTGKWb2o) for the project demo.
+
 ## Features
 
 - Intelligent resume parsing from PDF and DOCX formats
