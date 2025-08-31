@@ -132,17 +132,17 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
             <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
             Key Strengths
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {feedback.strengths?.slice(0, 5).map((strength, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * index }}
-                className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg"
+                className="flex items-start space-x-3 p-4 bg-green-50 rounded-lg border-l-4 border-green-300"
               >
                 <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0" />
-                <p className="text-sm text-green-800">{strength}</p>
+                <p className="text-sm text-green-800 leading-relaxed whitespace-pre-line">{strength}</p>
               </motion.div>
             ))}
           </div>
@@ -159,17 +159,17 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
             <AlertTriangle className="w-5 h-5 mr-2 text-yellow-600" />
             Areas of Concern
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {feedback.concerns?.slice(0, 5).map((concern, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * index }}
-                className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg"
+                className="flex items-start space-x-3 p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-300"
               >
                 <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0" />
-                <p className="text-sm text-yellow-800">{concern}</p>
+                <p className="text-sm text-yellow-800 leading-relaxed whitespace-pre-line">{concern}</p>
               </motion.div>
             ))}
           </div>
@@ -188,7 +188,11 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ result, onReset }) => {
             <TrendingUp className="w-5 h-5 mr-2 text-tech-600" />
             Executive Summary
           </h3>
-          <p className="text-gray-700 leading-relaxed">{feedback.summary}</p>
+          <div className="text-gray-700 leading-relaxed whitespace-pre-line space-y-4">
+            {feedback.summary.split('\n\n').map((paragraph, index) => (
+              <p key={index} className="mb-4">{paragraph}</p>
+            ))}
+          </div>
         </motion.div>
       )}
 
