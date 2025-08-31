@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Briefcase, Link, FileText } from 'lucide-react';
-import { JobInput as JobInputType } from '../types';
+import type { JobInput as JobInputType } from '../types';
 
 interface JobInputProps {
   jobInput: JobInputType;

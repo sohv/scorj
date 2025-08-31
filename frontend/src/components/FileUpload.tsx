@@ -37,18 +37,18 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, uploadedFile }) =
       </h2>
 
       {!uploadedFile ? (
-        <motion.div
-          {...getRootProps()}
-          className={`
-            border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300
-            ${isDragActive 
-              ? 'border-tech-400 bg-tech-50' 
-              : 'border-gray-300 hover:border-tech-400 hover:bg-tech-25'
-            }
-          `}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
+        <div {...getRootProps()}>
+          <motion.div
+            className={`
+              border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300
+              ${isDragActive 
+                ? 'border-tech-400 bg-tech-50' 
+                : 'border-gray-300 hover:border-tech-400 hover:bg-tech-25'
+              }
+            `}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
           <input {...getInputProps()} />
           <motion.div
             animate={isDragActive ? { scale: 1.1 } : { scale: 1 }}
@@ -67,7 +67,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, uploadedFile }) =
             <span className="px-3 py-1 bg-gray-100 rounded-full">PDF</span>
             <span className="px-3 py-1 bg-gray-100 rounded-full">DOCX</span>
           </div>
-        </motion.div>
+          </motion.div>
+        </div>
       ) : (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}

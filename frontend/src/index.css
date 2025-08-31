@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
   html {
@@ -8,13 +6,17 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen;
+    background: linear-gradient(to bottom right, #f8fafc, #dbeafe);
+    min-height: 100vh;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-tech;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 25px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05);
   }
   
   .tech-gradient {
@@ -22,7 +24,10 @@
   }
   
   .tech-gradient-text {
-    @apply bg-gradient-to-r from-tech-600 to-primary-600 bg-clip-text text-transparent;
+    background: linear-gradient(to right, #0284c7, #2563eb);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   
   .animate-float {
@@ -35,19 +40,31 @@
   }
   
   .progress-bar {
-    @apply relative overflow-hidden bg-gray-200 rounded-full;
+    position: relative;
+    overflow: hidden;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
   }
   
   .progress-fill {
-    @apply h-full bg-gradient-to-r from-tech-500 to-primary-500 transition-all duration-500 ease-out;
+    height: 100%;
+    background: linear-gradient(to right, #0ea5e9, #3b82f6);
+    transition: all 0.5s ease-out;
   }
   
   .score-circle {
-    @apply relative inline-flex items-center justify-center;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .score-ring {
-    @apply absolute inset-0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     transform: rotate(-90deg);
   }
 }

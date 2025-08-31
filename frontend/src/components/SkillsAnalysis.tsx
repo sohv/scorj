@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Target, TrendingUp } from 'lucide-react';
-import { ScoringResult } from '../types';
+import type { ScoringResult } from '../types';
 
 interface SkillsAnalysisProps {
   result: ScoringResult;

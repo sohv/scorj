@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ScoringResult } from '../types';
+import type { ScoringResult } from '../types';
 
 interface ScoreVisualizationProps {
   result: ScoringResult;
@@ -83,7 +83,7 @@ const ScoreVisualization: React.FC<ScoreVisualizationProps> = ({ result }) => {
                 paddingAngle={2}
                 dataKey="value"
               >
-                {pieData.map((entry, index) => (
+                {pieData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>

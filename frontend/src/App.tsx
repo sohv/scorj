@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import FileUpload from './components/FileUpload';
@@ -7,13 +7,13 @@ import UserComments from './components/UserComments';
 import ScoringProgress from './components/ScoringProgress';
 import ResultsDisplay from './components/ResultsDisplay';
 import AIChat from './components/AIChat';
-import { ScoringResult, ScoringState } from './types';
+import type { ScoringResult, ScoringState, JobInput as JobInputType } from './types';
 
 function App() {
   const [scoringState, setScoringState] = useState<ScoringState>('idle');
   const [scoringResult, setScoringResult] = useState<ScoringResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [jobInput, setJobInput] = useState({ type: 'url', value: '' });
+  const [jobInput, setJobInput] = useState<JobInputType>({ type: 'url' as const, value: '' });
   const [userComments, setUserComments] = useState('');
   const [progress, setProgress] = useState(0);
 
@@ -63,6 +63,7 @@ function App() {
       }
 
       const result = await response.json();
+      console.log('Scoring result received:', result);
       setScoringResult(result);
       setScoringState('completed');
       

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw, Award, TrendingUp, AlertTriangle, CheckCircle, Clock, Zap } from 'lucide-react';
-import { ScoringResult } from '../types';
+import type { ScoringResult } from '../types';
 import ScoreVisualization from './ScoreVisualization';
 import SkillsAnalysis from './SkillsAnalysis';
 import RecommendationsPanel from './RecommendationsPanel';

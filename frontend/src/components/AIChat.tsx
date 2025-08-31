@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Send, Bot, User, Sparkles } from 'lucide-react';
-import { ScoringResult, ChatMessage } from '../types';
+import type { ScoringResult, ChatMessage } from '../types';
 
 interface AIChatProps {
   scoringResult: ScoringResult;
@@ -86,7 +86,7 @@ const AIChat: React.FC<AIChatProps> = ({ scoringResult }) => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -138,20 +138,23 @@ const AIChat: React.FC<AIChatProps> = ({ scoringResult }) => {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-2"
             >
-              {/* User Question */}
-              <div className="flex justify-end">
-                <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
-                  <div className="bg-tech-600 text-white p-3 rounded-2xl rounded-tr-md">
-                    <p className="text-sm">{message.question}</p>
-                  </div>
-                  <div className="w-8 h-8 bg-tech-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-tech-600" />
+              {/* User Message */}
+              {message.model === 'user' && (
+                <div className="flex justify-end">
+                  <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
+                    <div className="bg-blue-500 p-3 rounded-2xl rounded-tr-md">
+                      <p className="text-sm text-white font-semibold">{message.question}</p>
+                      <p className="text-xs text-blue-100 mt-1">{message.timestamp}</p>
+                    </div>
+                    <div className="w-8 h-8 bg-tech-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-tech-600" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* AI Answer */}
-              {message.answer && (
+              {/* AI Message */}
+              {message.model !== 'user' && message.answer && (
                 <div className="flex justify-start">
                   <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
                     <div className="w-8 h-8 bg-gradient-to-r from-tech-500 to-primary-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -216,7 +219,7 @@ const AIChat: React.FC<AIChatProps> = ({ scoringResult }) => {
           <textarea
             value={currentQuestion}
             onChange={(e) => setCurrentQuestion(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Ask about your score, get career advice, or request specific feedback..."
             rows={2}
             className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-tech-500 focus:border-transparent transition-all duration-200 resize-none"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Zap, AlertCircle, RotateCcw } from 'lucide-react';
-import { ScoringState } from '../types';
+import { Brain, AlertCircle, RotateCcw } from 'lucide-react';
+import type { ScoringState } from '../types';
 
 interface ScoringProgressProps {
   progress: number;
