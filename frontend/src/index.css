@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-tech;
+  }
+  
+  .tech-gradient {
+    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #1d4ed8 100%);
+  }
+  
+  .tech-gradient-text {
+    @apply bg-gradient-to-r from-tech-600 to-primary-600 bg-clip-text text-transparent;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .progress-bar {
+    @apply relative overflow-hidden bg-gray-200 rounded-full;
+  }
+  
+  .progress-fill {
+    @apply h-full bg-gradient-to-r from-tech-500 to-primary-500 transition-all duration-500 ease-out;
+  }
+  
+  .score-circle {
+    @apply relative inline-flex items-center justify-center;
+  }
+  
+  .score-ring {
+    @apply absolute inset-0;
+    transform: rotate(-90deg);
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .backdrop-blur-glass {
+    backdrop-filter: blur(16px) saturate(180%);
+  }
+}
