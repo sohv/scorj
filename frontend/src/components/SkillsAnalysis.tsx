@@ -28,14 +28,14 @@ const SkillsAnalysis: React.FC<SkillsAnalysisProps> = ({ result }) => {
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-tech-700">Skills Match Rate</span>
             <span className="text-lg font-bold text-tech-800">
-              {skillsAnalysis.match_percentage.toFixed(1)}%
+              {skillsAnalysis.match_percentage?.toFixed(1) ?? 'N/A'}%
             </span>
           </div>
           <div className="progress-bar h-2">
             <motion.div
               className="progress-fill"
               initial={{ width: 0 }}
-              animate={{ width: `${skillsAnalysis.match_percentage}%` }}
+              animate={{ width: `${skillsAnalysis.match_percentage ?? 0}%` }}
               transition={{ duration: 1, delay: 0.5 }}
             />
           </div>
@@ -107,13 +107,13 @@ const SkillsAnalysis: React.FC<SkillsAnalysisProps> = ({ result }) => {
             </div>
             <div className="p-3 bg-tech-50 rounded-lg text-center">
               <p className="text-2xl font-bold text-tech-700">
-                {feedback.structured_analysis.experience_analysis.relevant_years.toFixed(1)}
+                {feedback.structured_analysis.experience_analysis.relevant_years?.toFixed(1) ?? 'N/A'}
               </p>
               <p className="text-xs text-tech-600">Relevant Years</p>
             </div>
             <div className="p-3 bg-tech-50 rounded-lg text-center">
               <p className="text-2xl font-bold text-tech-700">
-                {feedback.structured_analysis.experience_analysis.relevance_score.toFixed(0)}%
+                {feedback.structured_analysis.experience_analysis.relevance_score?.toFixed(0) ?? 'N/A'}%
               </p>
               <p className="text-xs text-tech-600">Relevance Score</p>
             </div>
