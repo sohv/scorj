@@ -5,21 +5,21 @@
     "skills_score": 85,
     "experience_score": 80,
     "education_score": 100,
-    "domain_score": 70
+    "domain_score": 80
   },
   "match_category": "Good match with minor gaps",
-  "summary": "John Doe presents a strong candidacy for the Senior Full Stack Developer position, showcasing relevant technical skills and solid experience in web development. While he meets most requirements, there are minor gaps in specific areas such as Kubernetes experience.",
+  "summary": "John Doe presents a strong candidacy for the Senior Full Stack Developer position, demonstrating relevant technical skills and experience. While he meets most requirements, there are minor gaps in specific technologies that could enhance his fit.",
   "strengths": [
-    "Strong technical skills in Python, JavaScript, and React",
-    "Experience with CI/CD pipelines and containerization using Docker",
-    "Solid educational background with a Master's degree in Computer Science",
-    "Leadership experience managing a team of developers",
-    "Proficient in database management with PostgreSQL"
+    "Strong proficiency in required programming languages (Python, JavaScript, React)",
+    "Solid experience with cloud services (AWS) and containerization (Docker)",
+    "Experience leading a team and mentoring developers",
+    "Strong educational background with a Master's degree in Computer Science",
+    "Hands-on experience with CI/CD pipelines"
   ],
   "concerns": [
     "Lack of experience with Kubernetes, which is preferred for the role",
-    "Limited exposure to mentoring junior developers as indicated in the resume",
-    "No explicit mention of strong problem-solving and communication skills"
+    "Limited exposure to specific full-stack development frameworks beyond those listed",
+    "No explicit mention of strong problem-solving and communication skills in the resume"
   ],
   "missing_skills": [
     "Kubernetes"
@@ -39,17 +39,18 @@
   ],
   "experience_assessment": {
     "relevant_years": 5,
-    "role_progression": "Demonstrates upward mobility from Software Engineer to Senior Software Developer",
-    "industry_fit": "Experience aligns well with web development and software engineering roles"
+    "role_progression": "Progressed from Software Engineer to Senior Software Developer, indicating growth in responsibility and skill.",
+    "industry_fit": "Experience in both corporate and startup environments, showcasing adaptability."
   },
   "recommendations": [
-    "Gain experience with Kubernetes to enhance cloud service skills",
-    "Highlight specific examples of problem-solving and communication skills in future applications",
-    "Consider mentoring opportunities to strengthen leadership experience"
+    "Gain experience with Kubernetes to enhance cloud service skills.",
+    "Highlight problem-solving and communication skills in the resume.",
+    "Consider contributing to open-source projects to broaden exposure to different frameworks.",
+    "Seek opportunities to work on full-stack projects that require a broader range of technologies."
   ],
   "risk_factors": [
-    "Potential lack of experience in mentoring junior developers",
-    "Limited exposure to Kubernetes may hinder adaptability to the company's tech stack"
+    "Potential gaps in experience with preferred technologies could limit adaptability.",
+    "Limited exposure to diverse frameworks may affect versatility in project assignments."
   ],
   "final_score": 82,
   "structured_analysis": {
@@ -57,17 +58,17 @@
       "match_percentage": 52.17391304347826,
       "matching_skills": [
         "React",
-        "aws",
-        "Docker",
         "react",
-        "JavaScript",
-        "postgresql",
+        "AWS",
+        "aws",
         "Python",
+        "JavaScript",
         "docker",
+        "postgresql",
+        "Docker",
         "PostgreSQL",
-        "python",
         "javascript",
-        "AWS"
+        "python"
       ],
       "total_job_skills": 23,
       "total_matched": 12,
@@ -78,29 +79,19 @@
           "similarity": 1.000000238418579
         },
         {
-          "job_skill": "aws",
-          "resume_skill": "AWS",
-          "similarity": 1.0000004768371582
-        },
-        {
-          "job_skill": "Docker",
-          "resume_skill": "Docker",
-          "similarity": 0.9999998807907104
-        },
-        {
           "job_skill": "react",
           "resume_skill": "React",
           "similarity": 1.000000238418579
         },
         {
-          "job_skill": "JavaScript",
-          "resume_skill": "JavaScript",
-          "similarity": 1.0
+          "job_skill": "AWS",
+          "resume_skill": "AWS",
+          "similarity": 1.0000004768371582
         },
         {
-          "job_skill": "postgresql",
-          "resume_skill": "PostgreSQL",
-          "similarity": 0.9999998807907104
+          "job_skill": "aws",
+          "resume_skill": "AWS",
+          "similarity": 1.0000004768371582
         },
         {
           "job_skill": "Python",
@@ -108,7 +99,22 @@
           "similarity": 1.0000001192092896
         },
         {
+          "job_skill": "JavaScript",
+          "resume_skill": "JavaScript",
+          "similarity": 1.0
+        },
+        {
           "job_skill": "docker",
+          "resume_skill": "Docker",
+          "similarity": 0.9999998807907104
+        },
+        {
+          "job_skill": "postgresql",
+          "resume_skill": "PostgreSQL",
+          "similarity": 0.9999998807907104
+        },
+        {
+          "job_skill": "Docker",
           "resume_skill": "Docker",
           "similarity": 0.9999998807907104
         },
@@ -118,19 +124,14 @@
           "similarity": 0.9999998807907104
         },
         {
-          "job_skill": "python",
-          "resume_skill": "Python",
-          "similarity": 1.0000001192092896
-        },
-        {
           "job_skill": "javascript",
           "resume_skill": "JavaScript",
           "similarity": 1.0
         },
         {
-          "job_skill": "AWS",
-          "resume_skill": "AWS",
-          "similarity": 1.0000004768371582
+          "job_skill": "python",
+          "resume_skill": "Python",
+          "similarity": 1.0000001192092896
         }
       ],
       "similarity_score": 1.0000000993410747,
@@ -156,7 +157,7 @@
       "degree_level_score": 80
     },
     "metadata": {
-      "analysis_timestamp": "2025-07-29T17:45:57.802917",
+      "analysis_timestamp": "2025-09-02T01:15:30.272794",
       "resume_length": 816,
       "job_description_length": 789
     }
@@ -170,21 +171,21 @@
         "skills_score": 85,
         "experience_score": 80,
         "education_score": 100,
-        "domain_score": 70
+        "domain_score": 80
       },
       "match_category": "Good match with minor gaps",
-      "summary": "John Doe presents a strong candidacy for the Senior Full Stack Developer position, showcasing relevant technical skills and solid experience in web development. While he meets most requirements, there are minor gaps in specific areas such as Kubernetes experience.",
+      "summary": "John Doe presents a strong candidacy for the Senior Full Stack Developer position, demonstrating relevant technical skills and experience. While he meets most requirements, there are minor gaps in specific technologies that could enhance his fit.",
       "strengths": [
-        "Strong technical skills in Python, JavaScript, and React",
-        "Experience with CI/CD pipelines and containerization using Docker",
-        "Solid educational background with a Master's degree in Computer Science",
-        "Leadership experience managing a team of developers",
-        "Proficient in database management with PostgreSQL"
+        "Strong proficiency in required programming languages (Python, JavaScript, React)",
+        "Solid experience with cloud services (AWS) and containerization (Docker)",
+        "Experience leading a team and mentoring developers",
+        "Strong educational background with a Master's degree in Computer Science",
+        "Hands-on experience with CI/CD pipelines"
       ],
       "concerns": [
         "Lack of experience with Kubernetes, which is preferred for the role",
-        "Limited exposure to mentoring junior developers as indicated in the resume",
-        "No explicit mention of strong problem-solving and communication skills"
+        "Limited exposure to specific full-stack development frameworks beyond those listed",
+        "No explicit mention of strong problem-solving and communication skills in the resume"
       ],
       "missing_skills": [
         "Kubernetes"
@@ -204,37 +205,38 @@
       ],
       "experience_assessment": {
         "relevant_years": 5,
-        "role_progression": "Demonstrates upward mobility from Software Engineer to Senior Software Developer",
-        "industry_fit": "Experience aligns well with web development and software engineering roles"
+        "role_progression": "Progressed from Software Engineer to Senior Software Developer, indicating growth in responsibility and skill.",
+        "industry_fit": "Experience in both corporate and startup environments, showcasing adaptability."
       },
       "recommendations": [
-        "Gain experience with Kubernetes to enhance cloud service skills",
-        "Highlight specific examples of problem-solving and communication skills in future applications",
-        "Consider mentoring opportunities to strengthen leadership experience"
+        "Gain experience with Kubernetes to enhance cloud service skills.",
+        "Highlight problem-solving and communication skills in the resume.",
+        "Consider contributing to open-source projects to broaden exposure to different frameworks.",
+        "Seek opportunities to work on full-stack projects that require a broader range of technologies."
       ],
       "risk_factors": [
-        "Potential lack of experience in mentoring junior developers",
-        "Limited exposure to Kubernetes may hinder adaptability to the company's tech stack"
+        "Potential gaps in experience with preferred technologies could limit adaptability.",
+        "Limited exposure to diverse frameworks may affect versatility in project assignments."
       ]
     },
     "processing_info": {
       "model_used": "gpt-4o-mini",
       "provider": "OpenAI",
-      "processing_timestamp": "2025-07-29T17:46:08.658043",
+      "processing_timestamp": "2025-09-02T01:15:37.847693",
       "prompt_tokens": 877,
-      "completion_tokens": 451,
-      "total_tokens": 1328
+      "completion_tokens": 479,
+      "total_tokens": 1356
     }
   },
   "transparency": {
     "methodology": "OpenAI GPT + Embeddings + Dynamic Weights + Context Bonuses",
-    "processing_time_seconds": 15.23,
-    "timestamp": "2025-07-29T17:46:08.658089",
+    "processing_time_seconds": 9.54,
+    "timestamp": "2025-09-02T01:15:37.847706",
     "dynamic_weights": {
-      "skills_match": 0.45,
-      "experience_match": 0.35,
-      "education_match": 0.15,
-      "domain_expertise": 0.05
+      "skills_match": 0.4,
+      "experience_match": 0.4,
+      "education_match": 0.1,
+      "domain_expertise": 0.1
     },
     "score_components": {
       "structured_score": 0,
