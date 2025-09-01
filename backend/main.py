@@ -210,7 +210,8 @@ async def chat_with_ai(
         model="gpt-4o-mini",
         messages=messages,
         max_tokens=500,
-        temperature=0.7
+        temperature=0.7,
+        seed=42
     )
     
     return {
