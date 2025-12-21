@@ -26,7 +26,7 @@ class JobParserConfig:
 @dataclass
 class ScoringConfig:
     # Model configurations
-    openai_model: str = "gpt-4o-mini"
+    openai_model: str = "gpt-5-mini-2025-08-07"
     gemini_model: str = "gemini-2.0-flash"
     
     # Scoring weights (must sum to 1.0)

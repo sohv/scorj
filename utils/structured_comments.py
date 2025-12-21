@@ -71,7 +71,7 @@ class MultiDimensionalAnalysis:
 class GPTMultiDimensionalAnalyzer:
     def __init__(self):
         self.openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        self.model = "gpt-4o-mini"
+        self.model = "gpt-5-mini-2025-08-07"
 
     def analyze_comments(self, comments: str, job_data: Dict[str, Any]) -> MultiDimensionalAnalysis:
         """Analyze user comments across all dimensions and validate against job requirements"""
@@ -92,8 +92,7 @@ class GPTMultiDimensionalAnalyzer:
                     {"role": "user", "content": analysis_prompt}
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.1,
-                max_tokens=1200
+                max_completion_tokens=4000
             )
             result = json.loads(response.choices[0].message.content)
         except Exception as e:

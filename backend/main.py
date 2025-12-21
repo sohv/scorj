@@ -207,11 +207,9 @@ async def chat_with_ai(
     
     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5-mini-2025-08-07",
         messages=messages,
-        max_tokens=500,
-        temperature=0.7,
-        seed=42
+        max_completion_tokens=4000
     )
     
     return {

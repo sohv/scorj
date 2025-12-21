@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class DynamicWeightCalculator:
     def __init__(self):
         self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.model = "gpt-4o-mini"
+        self.model = "gpt-5-mini-2025-08-07"
     
     def calculate_scoring_weights(self, job_data: Dict[str, Any]) -> Dict[str, float]:
         """Use GPT to determine dynamic weights for main scoring components"""
@@ -60,11 +60,21 @@ class DynamicWeightCalculator:
                     {"role": "user", "content": prompt}
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.1,
-                max_tokens=500
+                max_completion_tokens=4000
             )
             
-            result = json.loads(response.choices[0].message.content)
+            # Debug: Check response structure
+            logger.info(f"Response object: {response}")
+            logger.info(f"Response choices: {response.choices}")
+            
+            content = response.choices[0].message.content
+            logger.info(f"Content received: {content[:200] if content else 'NONE'}...")  # Log first 200 chars
+            
+            if not content or not content.strip():
+                logger.warning("Empty response from GPT, using fallback weights")
+                return self._get_fallback_scoring_weights()
+                
+            result = json.loads(content)
             weights = result.get('weights', {})
             
             # Validate and normalize weights
@@ -127,8 +137,7 @@ class DynamicWeightCalculator:
                     {"role": "user", "content": prompt}
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.1,
-                max_tokens=400
+                max_completion_tokens=3000
             )
             
             result = json.loads(response.choices[0].message.content)

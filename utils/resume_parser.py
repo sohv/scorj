@@ -9,7 +9,7 @@ from openai import OpenAI
 class ResumeParser:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.model = "gpt-4o-mini"
+        self.model = "gpt-5-mini-2025-08-07"
         self.sections = {
             'education': r'(?i)(education|academic|qualification)',
             'experience': r'(?i)(experience|work|employment)',
@@ -83,8 +83,7 @@ class ResumeParser:
                     {"role": "system", "content": "You are an expert resume parser that extracts structured information from resumes. Always return valid JSON."},
                     {"role": "user", "content": prompt}
                 ],
-                response_format={"type": "json_object"},
-                temperature=0.1
+                response_format={"type": "json_object"}
             )
             
             parsed_data = json.loads(response.choices[0].message.content)
@@ -181,8 +180,7 @@ class ResumeParser:
                     {"role": "system", "content": "You are an expert at extracting skills from resumes. Return only a JSON array of skill strings."},
                     {"role": "user", "content": prompt}
                 ],
-                response_format={"type": "json_object"},
-                temperature=0.1
+                response_format={"type": "json_object"}
             )
             
             result = json.loads(response.choices[0].message.content)
@@ -229,8 +227,7 @@ class ResumeParser:
                     {"role": "system", "content": "You are an expert at extracting work experience from resumes. Return structured JSON data."},
                     {"role": "user", "content": prompt}
                 ],
-                response_format={"type": "json_object"},
-                temperature=0.1
+                response_format={"type": "json_object"}
             )
             
             result = json.loads(response.choices[0].message.content)

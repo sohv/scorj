@@ -19,7 +19,7 @@ class ScoringEngine(BaseScoringEngine):
     def __init__(self):
         super().__init__()  # Initialize base class
         self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.openai_model = "gpt-4o-mini"
+        self.openai_model = "gpt-5-mini-2025-08-07"
 
     def _analyze_structured_data(self, resume_data: Dict[str, Any], job_data: Dict[str, Any]) -> Dict[str, Any]:
         analysis = {
@@ -109,13 +109,19 @@ class ScoringEngine(BaseScoringEngine):
                         {"role": "user", "content": prompt}
                     ],
                     response_format={"type": "json_object"},
-                    temperature=0.1,
-                    max_tokens=2000,
-                    top_p=0.9,
-                    seed=42
+                    max_completion_tokens=8000
                 )
                 
+                # Debug: Check response
+                logger.info(f"Response object: {response}")
+                logger.info(f"Response choices: {response.choices}")
+                
                 feedback_json = response.choices[0].message.content
+                logger.info(f"Feedback JSON received: {feedback_json[:200] if feedback_json else 'NONE'}...")  # Log first 200 chars
+                
+                if not feedback_json or not feedback_json.strip():
+                    raise ValueError("Empty response from OpenAI API")
+                    
                 openai_result = json.loads(feedback_json)
                 
                 # Add processing info

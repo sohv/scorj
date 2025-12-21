@@ -17,7 +17,7 @@ from utils.skills_matcher import SkillsProcessor
 class JobDescriptionParser:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.model = "gpt-4o-mini"
+        self.model = "gpt-5-mini-2025-08-07"
         self.skills_processor = SkillsProcessor()  # Initialize our skills processor
         
         parser_config = config.job_parser
@@ -277,8 +277,7 @@ class JobDescriptionParser:
                 {"role": "system", "content": "You are an expert at extracting skills and requirements from job descriptions. Return structured JSON data."},
                 {"role": "user", "content": prompt}
             ],
-            response_format={"type": "json_object"},
-            temperature=0.1
+            response_format={"type": "json_object"}
         )
         
         result = json.loads(response.choices[0].message.content)
@@ -305,8 +304,7 @@ class JobDescriptionParser:
                 {"role": "system", "content": "You are an expert at extracting job requirements. Return structured JSON data."},
                 {"role": "user", "content": prompt}
             ],
-            response_format={"type": "json_object"},
-            temperature=0.1
+            response_format={"type": "json_object"}
         )
         
         result = json.loads(response.choices[0].message.content)
@@ -338,8 +336,7 @@ class JobDescriptionParser:
                 {"role": "system", "content": "You are an expert at analyzing job requirements. Return structured JSON data."},
                 {"role": "user", "content": prompt}
             ],
-            response_format={"type": "json_object"},
-            temperature=0.1
+            response_format={"type": "json_object"}
         )
         
         result = json.loads(response.choices[0].message.content)
